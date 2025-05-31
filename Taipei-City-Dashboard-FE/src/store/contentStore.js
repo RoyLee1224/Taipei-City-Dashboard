@@ -76,9 +76,13 @@ export const useContentStore = defineStore("content", {
 			
 			// 載入翻譯資料
 			const { translateDashboards, ensureTranslationsLoaded } = useDataTranslation();
-			await ensureTranslationsLoaded();
 			
-			// 重新翻譯現有的儀表板資料
+			// 重要：強制重新載入翻譯
+			if (i18nStore.currentLocale !== 'zh-TW') {
+				await ensureTranslationsLoaded();
+			}
+			
+			// 重新翻譯現有的儀表板資料（無論什麼語言都要重新翻譯）
 			
 			// 重新翻譯個人儀表板
 			if (this.personalDashboards && this.personalDashboards.length > 0) {
@@ -102,6 +106,12 @@ export const useContentStore = defineStore("content", {
 					this.dashboards.set(key, translatedDashboards);
 				}
 			});
+			
+			// 重新翻譯當前儀表板的組件
+			if (this.cityDashboard.components) {
+				const { translateComponentData } = useDataTranslation();
+				this.cityDashboard.components = this.cityDashboard.components.map(translateComponentData);
+			}
 		},
 		setComponentData(index, component) {
 			this.currentDashboard.components[index] = component;

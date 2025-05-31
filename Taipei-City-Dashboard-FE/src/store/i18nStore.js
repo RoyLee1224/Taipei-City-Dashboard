@@ -257,28 +257,26 @@ export const useI18nStore = defineStore('i18n', () => {
 
   // 從 API 載入組件翻譯
   const loadComponentTranslations = async (languageCode = currentLocale.value) => {
-    if (languageCode === 'zh-TW' || translationsLoaded.value) {
-      return; // 中文是預設語言，不需要從 API 載入
+    if (languageCode === 'zh-TW') {
+      // 中文不需要從 API 載入，但要確保狀態正確
+      translationsLoaded.value = false;
+      return;
     }
-
+    
+    // 移除 translationsLoaded.value 的檢查，允許重新載入
     isLoadingTranslations.value = true;
     try {
       console.log('Loading translations for:', languageCode);
       console.log('API call URL:', `/translation/components?language_code=${languageCode}`);
       
-      // 直接在 URL 中指定參數，避免與 axios 攔截器衝突
       const response = await http.get(`/translation/components?language_code=${languageCode}`);
 
       console.log('Translation API response:', response);
 
       if (response.data.status === 'success') {
-        // 轉換 API 回傳的格式 (component_id -> name_translation) 
-        // 到我們需要的格式 (name -> translation)
         const apiTranslations = response.data.data;
         const componentTranslations = {};
         
-        // 這裡可能需要額外的邏輯來將 component_id 對應到 component name
-        // 目前先直接使用 ID 作為 key
         Object.entries(apiTranslations).forEach(([componentId, translation]) => {
           componentTranslations[componentId] = translation;
         });
@@ -298,13 +296,6 @@ export const useI18nStore = defineStore('i18n', () => {
       }
     } catch (error) {
       console.error('Failed to load component translations:', error);
-      console.error('Error details:', {
-        message: error.message,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        config: error.config
-      });
     } finally {
       isLoadingTranslations.value = false;
     }
@@ -315,8 +306,19 @@ export const useI18nStore = defineStore('i18n', () => {
     currentLocale.value = locale;
     localStorage.setItem('locale', locale);
     
-    // 載入翻譯資料
-    await loadComponentTranslations(locale);
+    // 重要修正：切換語言時重置翻譯狀態
+    if (locale === 'zh-TW') {
+      // 切換回中文時，清除所有動態翻譯並重置狀態
+      translationsLoaded.value = false;
+      // 清空英文組件翻譯
+      if (messages.value['en-US']?.data?.components) {
+        messages.value['en-US'].data.components = {};
+      }
+    } else {
+      // 切換到其他語言時也重置狀態，確保重新載入
+      translationsLoaded.value = false;
+      await loadComponentTranslations(locale);
+    }
   };
 
   // 翻譯函數

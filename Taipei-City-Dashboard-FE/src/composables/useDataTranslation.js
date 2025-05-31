@@ -156,7 +156,7 @@ export function useDataTranslation() {
 
   // 確保翻譯資料已載入
   const ensureTranslationsLoaded = async () => {
-    if (i18nStore.currentLocale !== 'zh-TW' && !i18nStore.translationsLoaded) {
+    if (i18nStore.currentLocale !== 'zh-TW') {
       await i18nStore.loadComponentTranslations();
     }
   };
