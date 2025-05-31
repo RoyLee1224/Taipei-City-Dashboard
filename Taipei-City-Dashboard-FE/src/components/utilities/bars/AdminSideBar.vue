@@ -1,14 +1,18 @@
 <!-- Developed by Taipei Urban Intelligence Center 2023-2024-->
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { useMapStore } from "../../../store/mapStore";
 import { useContentStore } from "../../../store/contentStore";
+import { useI18nStore } from "../../../store/i18nStore";
+import { useI18n } from "../../../composables/useI18n";
 
 import SideBarTab from "../miscellaneous/SideBarTab.vue";
 
 const mapStore = useMapStore();
 const contentStore = useContentStore();
+const i18nStore = useI18nStore();
+const { t } = useI18n();
 
 // The expanded state is also stored in localstorage to retain the setting after refresh
 const isExpanded = ref(true);
@@ -22,6 +26,7 @@ function toggleExpand() {
 }
 
 onMounted(() => {
+	contentStore.initializeTranslation();
 	const storedExpandedState = localStorage.getItem("isExpandedAdmin");
 	if (storedExpandedState === "false") {
 		isExpanded.value = false;
@@ -29,6 +34,14 @@ onMounted(() => {
 		isExpanded.value = true;
 	}
 });
+
+// Watch for language changes and reinitialize translation
+watch(
+	() => i18nStore.currentLocale,
+	() => {
+		contentStore.initializeTranslation();
+	}
+);
 </script>
 
 <template>
@@ -48,7 +61,7 @@ onMounted(() => {
           : "keyboard_double_arrow_right"
       }}</span>
     </button>
-    <h2>{{ isExpanded ? `儀表板設定` : `表板` }}</h2>
+    <h2>{{ isExpanded ? t('adminSidebar.dashboardSettings') : t('adminSidebar.dashboard') }}</h2>
     <template
       v-for="city in contentStore.cityManager.activeCities"
       :key="city"
@@ -61,36 +74,36 @@ onMounted(() => {
         :city="city"
       />
     </template>
-    <h2>{{ isExpanded ? `組件設定` : `組件` }}</h2>
+    <h2>{{ isExpanded ? t('adminSidebar.componentSettings') : t('adminSidebar.components') }}</h2>
     <SideBarTab
       icon="edit_note"
-      title="編輯公開組件"
+      :title="t('adminSidebar.editPublicComponents')"
       :expanded="isExpanded"
       index="edit-component"
     />
-    <h2>{{ isExpanded ? `問題回報` : `問題` }}</h2>
+    <h2>{{ isExpanded ? t('adminSidebar.issueReports') : t('adminSidebar.issues') }}</h2>
     <SideBarTab
       icon="bug_report"
-      title="待回覆問題"
+      :title="t('adminSidebar.pendingIssues')"
       :expanded="isExpanded"
       index="issue"
     />
     <SideBarTab
       icon="flood"
-      title="民眾災害通報"
+      :title="t('adminSidebar.citizenDisasterReports')"
       :expanded="isExpanded"
       index="disaster"
     />
-    <h2>{{ isExpanded ? `系統總覽` : `系統` }}</h2>
+    <h2>{{ isExpanded ? t('adminSidebar.systemOverview') : t('adminSidebar.system') }}</h2>
     <SideBarTab
       icon="person"
-      title="使用者資訊"
+      :title="t('adminSidebar.userInfo')"
       :expanded="isExpanded"
       index="user"
     />
     <SideBarTab
       icon="handshake"
-      title="貢獻者資訊"
+      :title="t('adminSidebar.contributorInfo')"
       :expanded="isExpanded"
       index="contributor"
     />

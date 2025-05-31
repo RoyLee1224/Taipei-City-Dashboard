@@ -9,6 +9,7 @@ import { useAuthStore } from "../../../store/authStore";
 import { useContentStore } from "../../../store/contentStore";
 import { useDialogStore } from "../../../store/dialogStore";
 import { useMapStore } from "../../../store/mapStore";
+import { useI18n } from "../../../composables/useI18n";
 
 import AddEditDashboards from "../../dialogs/AddEditDashboards.vue";
 import MobileNavigation from "../../dialogs/MobileNavigation.vue";
@@ -19,6 +20,7 @@ const dialogStore = useDialogStore();
 const mapStore = useMapStore();
 const authStore = useAuthStore();
 const route = useRoute();
+const { t } = useI18n();
 
 const isCurrentPageMapView = computed(() => route.name === "mapview");
 
@@ -54,7 +56,7 @@ function handleOpenSettings() {
       >
         <button @click="handleOpenSettings">
           <span>settings</span>
-          <p>設定</p>
+          <p>{{ t('settingsBar.settings') }}</p>
         </button>
       </div>
       <AddEditDashboards />
@@ -71,7 +73,7 @@ function handleOpenSettings() {
       }"
       @click="dialogStore.showDialog('addPin')"
     >
-      {{ mapStore.tempMarkerCoordinates ? "新增地標" : "雙擊以建立地標" }}
+      {{ mapStore.tempMarkerCoordinates ? t('settingsBar.addLandmark') : t('settingsBar.clickToCreateLandmark') }}
     </button>
   </div>
   <AddViewPoint name="addPin" />

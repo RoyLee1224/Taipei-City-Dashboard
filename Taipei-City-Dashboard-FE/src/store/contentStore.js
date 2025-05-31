@@ -11,8 +11,10 @@ import http from "../router/axios";
 import router from "../router/index";
 import { useDialogStore } from "./dialogStore";
 import { useAuthStore } from "./authStore";
+import { useI18nStore } from "./i18nStore";
 import { getComponentDataTimeframe } from "../assets/utilityFunctions/dataTimeframe";
 import { CityManager } from "../dashboardComponent/utilities/cityManager";
+import { useDataTranslation } from '../composables/useDataTranslation';
 
 export const useContentStore = defineStore("content", {
 	state: () => ({
@@ -67,6 +69,37 @@ export const useContentStore = defineStore("content", {
 	}),
 	getters: {},
 	actions: {
+		// Initialize translation function for cityManager
+		initializeTranslation() {
+			const i18nStore = useI18nStore();
+			this.cityManager.setTranslationFunction(i18nStore.t);
+			
+			// 重新翻譯現有的儀表板資料
+			const { translateDashboards } = useDataTranslation();
+			
+			// 重新翻譯個人儀表板
+			if (this.personalDashboards && this.personalDashboards.length > 0) {
+				this.personalDashboards = translateDashboards(this.personalDashboards);
+				
+				// 重新設定收藏儀表板
+				if (this.personalDashboards.length !== 0) {
+					this.favorites = this.personalDashboards.find(
+						(el) => el.icon === "favorite"
+					);
+					if (!this.favorites?.components) {
+						this.favorites.components = [];
+					}
+				}
+			}
+			
+			// 重新翻譯城市儀表板
+			this.dashboards.forEach((dashboardArray, key) => {
+				if (dashboardArray && dashboardArray.length > 0) {
+					const translatedDashboards = translateDashboards(dashboardArray);
+					this.dashboards.set(key, translatedDashboards);
+				}
+			});
+		},
 		setComponentData(index, component) {
 			this.currentDashboard.components[index] = component;
 		},
@@ -115,10 +148,13 @@ export const useContentStore = defineStore("content", {
 
 			this.dashboards.clear();
 			
+			// 引入翻譯功能
+			const { translateDashboards } = useDataTranslation();
+			
 			Object.entries(data).forEach(([key, dashboardArray]) => {
 				// deal with personal dashboard
 				if (key === 'personal') {
-					this.personalDashboards = Array.isArray(dashboardArray) ? dashboardArray : [];
+					this.personalDashboards = Array.isArray(dashboardArray) ? translateDashboards(dashboardArray) : [];
 					
 					if (this.personalDashboards.length !== 0) {
 						this.favorites = this.personalDashboards.find(
@@ -131,8 +167,9 @@ export const useContentStore = defineStore("content", {
 				} else if (this.cityManager.isCityEnabled(key)) {
 					// deal with other city dashboard
 					if (Array.isArray(dashboardArray)) {
-						// move map-layers to the end
-						this.dashboards.set(key, this.moveMapLayersToEnd(dashboardArray));
+						// move map-layers to the end and translate
+						const translatedDashboards = translateDashboards(dashboardArray);
+						this.dashboards.set(key, this.moveMapLayersToEnd(translatedDashboards));
 					} else {
 						this.dashboards.set(key, []);
 					}
@@ -337,6 +374,12 @@ export const useContentStore = defineStore("content", {
 				console.error("Error setting dashboard chart data:", error);
 				this.loading = false;
 			}
+			this.filterCurrentDashboardContent();
+
+			// 翻譯所有組件資料
+			const { translateComponentData } = useDataTranslation();
+			this.cityDashboard.components = this.cityDashboard.components.map(translateComponentData);
+			
 			this.filterCurrentDashboardContent();
 		},
 		// 5. filter the info for the current dashboard based on the index and city and adds it to "currentDashboard"
@@ -753,6 +796,14 @@ export const useContentStore = defineStore("content", {
 			this.ws.send(message.inctype + ": 位於 " + message.place);
 		},
 		*/
+		// 修改設定儀表板資料的方法
+		async setCurrentDashboard(index) {
+			// ... existing code ...
+			
+			// 在設定資料後進行翻譯
+			const { translateDashboard } = useDataTranslation();
+			this.currentDashboard = translateDashboard(this.currentDashboard);
+		},
 	},
 	debounce: {
 		favoriteComponent: 500,

@@ -4,12 +4,14 @@
 import { computed, ref } from "vue";
 import { useDialogStore } from "../../store/dialogStore";
 import { useContentStore } from "../../store/contentStore";
+import { useI18n } from "../../composables/useI18n";
 
 import DialogContainer from "./DialogContainer.vue";
 import ContributorInfo from "./ContributorInfo.vue";
 
 const dialogStore = useDialogStore();
 const contentStore = useContentStore();
+const { t } = useI18n();
 
 const currentContributor = ref(null);
 
@@ -36,8 +38,8 @@ function handleClose() {
     @on-close="handleClose"
   >
     <div class="contributorslist">
-      <h2>專案貢獻者清單</h2>
-      <label> 點擊貢獻者頭貼以了解更多 </label>
+      <h2>{{ t('contributorsList.title') }}</h2>
+      <label>{{ t('contributorsList.clickToLearnMore') }}</label>
       <div class="contributorslist-list">
         <button
           v-for="contributor in parsedContributors"
@@ -50,7 +52,7 @@ function handleClose() {
                 ? contributor.image
                 : `/images/contributors/${contributor.image}`
             "
-            :alt="`協作者-${contributor.user_name}`"
+            :alt="`${t('contributorsList.contributor')}-${contributor.user_name}`"
           >
         </button>
       </div>
