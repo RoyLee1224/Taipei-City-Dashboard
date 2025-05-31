@@ -126,6 +126,18 @@ export const useI18nStore = defineStore('i18n', () => {
         clickToLearnMore: '點擊貢獻者頭貼以了解更多',
         contributor: '貢獻者'
       },
+      login: {
+        appTitle: '臺北城市儀表板',
+        engTitle: 'Taipei City Dashboard',
+        taipeiPassLogin: '台北通登入',
+        email: '電子郵件',
+        password: '密碼',
+        loginButton: '登入',
+        agreementText: '點擊「台北通登入」即表示您已閱讀並同意',
+        privacyPolicyText: '的',
+        privacyPolicy: '隱私權政策',
+        slogan: '《讓臺北城市儀表板成為您的儀表板》'
+      },
       // 動態載入的組件翻譯
       data: {
         components: {}
@@ -243,6 +255,18 @@ export const useI18nStore = defineStore('i18n', () => {
         title: 'Project Contributors List',
         clickToLearnMore: 'Click contributor avatar to learn more',
         contributor: 'Contributor'
+      },
+      login: {
+        appTitle: 'Taipei City Dashboard',
+        engTitle: 'Taipei City Dashboard',
+        taipeiPassLogin: 'TaipeiPass Login',
+        email: 'Email',
+        password: 'Password',
+        loginButton: 'Login',
+        agreementText: 'By clicking "Taipei Pass Login", you agree to have read and agree to',
+        privacyPolicyText: 'the',
+        privacyPolicy: 'Privacy Policy',
+        slogan: '《Let Taipei City Dashboard be Your Dashboard》'
       },
       // 動態載入的組件翻譯
       data: {
