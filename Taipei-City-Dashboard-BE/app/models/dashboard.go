@@ -14,7 +14,7 @@ import (
 /* ----- Models ----- */
 
 type Dashboard struct {
-	ID         int           `json:"-"         gorm:"column:id;autoincrement;primaryKey"`
+	ID         int           `json:"id"         gorm:"column:id;autoincrement;primaryKey"`
 	Index      string        `json:"index" gorm:"column:index;type:varchar;unique;not null"     `
 	Name       string        `json:"name"       gorm:"column:name;type:varchar;not null"`
 	Components pq.Int64Array `json:"components" gorm:"column:components;type:int[]"`

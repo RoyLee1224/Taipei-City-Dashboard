@@ -94,4 +94,93 @@ func UpdateComponentTranslation(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Translation updated successfully"})
+}
+
+// Dashboard Translation Controllers
+
+/*
+GetDashboardTranslations retrieves all dashboard translations for a specific language.
+GET /api/v1/translation/dashboards?language_code=en-US
+*/
+func GetDashboardTranslations(c *gin.Context) {
+	// Get the language code from query parameters
+	languageCode := c.Query("language_code")
+	if languageCode == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "language_code is required"})
+		return
+	}
+
+	// Get translations from database
+	translations, err := models.GetAllDashboardTranslations(languageCode)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": err.Error()})
+		return
+	}
+
+	// Return the translations
+	c.JSON(http.StatusOK, gin.H{"status": "success", "data": translations})
+}
+
+/*
+CreateDashboardTranslation creates a new dashboard translation.
+POST /api/v1/translation/dashboards
+Body: {
+	"dashboard_id": 1,
+	"language_code": "en-US",
+	"name_translation": "Dashboard Name"
+}
+*/
+func CreateDashboardTranslation(c *gin.Context) {
+	var req struct {
+		DashboardID     int    `json:"dashboard_id" binding:"required"`
+		LanguageCode    string `json:"language_code" binding:"required"`
+		NameTranslation string `json:"name_translation" binding:"required"`
+	}
+
+	// Bind JSON request body
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": err.Error()})
+		return
+	}
+
+	// Create the translation
+	err := models.CreateDashboardTranslation(req.DashboardID, req.LanguageCode, req.NameTranslation)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Dashboard translation created successfully"})
+}
+
+/*
+UpdateDashboardTranslation updates an existing dashboard translation.
+PATCH /api/v1/translation/dashboards
+Body: {
+	"dashboard_id": 1,
+	"language_code": "en-US",
+	"name_translation": "Updated Dashboard Name"
+}
+*/
+func UpdateDashboardTranslation(c *gin.Context) {
+	var req struct {
+		DashboardID     int    `json:"dashboard_id" binding:"required"`
+		LanguageCode    string `json:"language_code" binding:"required"`
+		NameTranslation string `json:"name_translation" binding:"required"`
+	}
+
+	// Bind JSON request body
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": err.Error()})
+		return
+	}
+
+	// Update the translation
+	err := models.UpdateDashboardTranslation(req.DashboardID, req.LanguageCode, req.NameTranslation)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Dashboard translation updated successfully"})
 } 

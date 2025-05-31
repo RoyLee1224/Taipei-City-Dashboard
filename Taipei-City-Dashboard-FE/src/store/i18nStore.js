@@ -283,10 +283,10 @@ export const useI18nStore = defineStore('i18n', () => {
 
         // 更新翻譯資料
         if (!messages.value[languageCode]) {
-          messages.value[languageCode] = { data: { components: {} } };
+          messages.value[languageCode] = { data: { components: {}, dashboards: {} } };
         }
         if (!messages.value[languageCode].data) {
-          messages.value[languageCode].data = { components: {} };
+          messages.value[languageCode].data = { components: {}, dashboards: {} };
         }
         
         messages.value[languageCode].data.components = componentTranslations;
@@ -299,6 +299,61 @@ export const useI18nStore = defineStore('i18n', () => {
     } finally {
       isLoadingTranslations.value = false;
     }
+  };
+
+  // 從 API 載入儀表板翻譯
+  const loadDashboardTranslations = async (languageCode = currentLocale.value) => {
+    if (languageCode === 'zh-TW') {
+      return;
+    }
+    
+    isLoadingTranslations.value = true;
+    try {
+      console.log('Loading dashboard translations for:', languageCode);
+      console.log('API call URL:', `/translation/dashboards?language_code=${languageCode}`);
+      
+      const response = await http.get(`/translation/dashboards?language_code=${languageCode}`);
+
+      console.log('Dashboard Translation API response:', response);
+
+      if (response.data.status === 'success') {
+        const apiTranslations = response.data.data;
+        const dashboardTranslations = {};
+        
+        Object.entries(apiTranslations).forEach(([dashboardId, translation]) => {
+          dashboardTranslations[dashboardId] = translation;
+        });
+
+        // 更新翻譯資料
+        if (!messages.value[languageCode]) {
+          messages.value[languageCode] = { data: { components: {}, dashboards: {} } };
+        }
+        if (!messages.value[languageCode].data) {
+          messages.value[languageCode].data = { components: {}, dashboards: {} };
+        }
+        
+        messages.value[languageCode].data.dashboards = dashboardTranslations;
+        
+        console.log('Dashboard translations loaded:', dashboardTranslations);
+      }
+    } catch (error) {
+      console.error('Failed to load dashboard translations:', error);
+    } finally {
+      isLoadingTranslations.value = false;
+    }
+  };
+
+  // 載入所有翻譯
+  const loadAllTranslations = async (languageCode = currentLocale.value) => {
+    if (languageCode === 'zh-TW') {
+      translationsLoaded.value = false;
+      return;
+    }
+    
+    await Promise.all([
+      loadComponentTranslations(languageCode),
+      loadDashboardTranslations(languageCode)
+    ]);
   };
 
   // 切換語言
@@ -314,10 +369,13 @@ export const useI18nStore = defineStore('i18n', () => {
       if (messages.value['en-US']?.data?.components) {
         messages.value['en-US'].data.components = {};
       }
+      if (messages.value['en-US']?.data?.dashboards) {
+        messages.value['en-US'].data.dashboards = {};
+      }
     } else {
       // 切換到其他語言時也重置狀態，確保重新載入
       translationsLoaded.value = false;
-      await loadComponentTranslations(locale);
+      await loadAllTranslations(locale);
     }
   };
 
@@ -367,6 +425,7 @@ export const useI18nStore = defineStore('i18n', () => {
     setLocale,
     t,
     loadComponentTranslations,
-    getComponentTranslationById
+    getComponentTranslationById,
+    loadAllTranslations
   };
 }); 

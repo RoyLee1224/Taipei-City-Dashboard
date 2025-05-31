@@ -72,7 +72,25 @@ export function useDataTranslation() {
 
     const translatedDashboard = { ...dashboard };
     
-    // 翻譯儀表板名稱
+    // 如果當前語言是中文，直接返回
+    if (i18nStore.currentLocale === 'zh-TW') {
+      return translatedDashboard;
+    }
+    
+    // 先嘗試使用 ID 翻譯（如果有 id 屬性）
+    if (translatedDashboard.id) {
+      const dashboardTranslations = i18nStore.messages[i18nStore.currentLocale]?.data?.dashboards;
+      if (dashboardTranslations && dashboardTranslations[translatedDashboard.id]) {
+        translatedDashboard.name = dashboardTranslations[translatedDashboard.id];
+        // 如果有組件陣列，也要翻譯組件
+        if (translatedDashboard.components && Array.isArray(translatedDashboard.components)) {
+          translatedDashboard.components = translatedDashboard.components.map(translateComponentData);
+        }
+        return translatedDashboard;
+      }
+    }
+    
+    // 如果 ID 翻譯沒有結果，回退到原來的方式（使用文字）
     if (translatedDashboard.name) {
       translatedDashboard.name = translateText(translatedDashboard.name, 'dashboards');
     }

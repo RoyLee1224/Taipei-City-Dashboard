@@ -8,6 +8,7 @@ import { useMapStore } from "../../../store/mapStore";
 import { useAuthStore } from "../../../store/authStore";
 import { useI18nStore } from "../../../store/i18nStore";
 import { useI18n } from "../../../composables/useI18n";
+import { useDataTranslation } from "../../../composables/useDataTranslation";
 
 import SideBarTab from "../miscellaneous/SideBarTab.vue";
 
@@ -17,6 +18,7 @@ const mapStore = useMapStore();
 const authStore = useAuthStore();
 const i18nStore = useI18nStore();
 const { t } = useI18n();
+const { translateDashboard } = useDataTranslation();
 
 // The expanded state is also stored in localstorage to retain the setting after refresh
 const isExpanded = ref(true);
@@ -159,7 +161,7 @@ onMounted(async () => {
             )"
             :key="item.index"
             :icon="item.icon"
-            :title="item.name"
+            :title="translateDashboard(item).name"
             :index="item.index"
             :expanded="isExpanded"
           />
@@ -187,7 +189,7 @@ onMounted(async () => {
             v-for="item in contentStore.getDashboardsByCity(city)"
             :key="item.index"
             :icon="item.icon"
-            :title="item.name"
+            :title="translateDashboard(item).name"
             :index="item.index"
             :city="city"
             :expanded="isExpanded"

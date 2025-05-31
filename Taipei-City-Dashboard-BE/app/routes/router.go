@@ -184,10 +184,13 @@ func configureTranslationRoutes() {
 	// 暫時移除 rate limiting middleware 來測試
 	{
 		translationRoutes.GET("/components", controllers.GetComponentTranslations)
+		translationRoutes.GET("/dashboards", controllers.GetDashboardTranslations)
 	}
 	translationRoutes.Use(middleware.IsSysAdm())
 	{
 		translationRoutes.POST("/components", controllers.CreateComponentTranslation)
 		translationRoutes.PATCH("/components", controllers.UpdateComponentTranslation)
+		translationRoutes.POST("/dashboards", controllers.CreateDashboardTranslation)
+		translationRoutes.PATCH("/dashboards", controllers.UpdateDashboardTranslation)
 	}
 }
