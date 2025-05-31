@@ -1,0 +1,23 @@
+<template>
+  <div>
+    <h2>{{ td('districts', '中正區') }}</h2>
+    <p>{{ td('categories', '交通') }}</p>
+    <ul>
+      <li v-for="district in translatedDistricts" :key="district">
+        {{ district }}
+      </li>
+    </ul>
+  </div>
+</template>
+
+<script setup>
+import { computed } from 'vue';
+import { useDataTranslation } from '../composables/useDataTranslation';
+
+const { td, translateArray } = useDataTranslation();
+
+const districts = ['中正區', '大同區', '中山區'];
+const translatedDistricts = computed(() => 
+  translateArray('districts', districts)
+);
+</script> 

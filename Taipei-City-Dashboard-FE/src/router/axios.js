@@ -7,6 +7,7 @@ import axios from "axios";
 import { useAuthStore } from "../store/authStore";
 import { useDialogStore } from "../store/dialogStore";
 import { useContentStore } from "../store/contentStore";
+import { useI18nStore } from "../store/i18nStore";
 
 const http = axios.create({
 	baseURL: import.meta.env.VITE_API_URL,
@@ -18,10 +19,15 @@ const http = axios.create({
 // Request Handler
 http.interceptors.request.use((request) => {
 	const authStore = useAuthStore();
+	const i18nStore = useI18nStore();
 	const contentStore = useContentStore();
 
 	contentStore.loading = true;
 	contentStore.error = false;
+
+	// 加入語言參數
+	if (!request.params) request.params = {};
+	request.params.lang = i18nStore.currentLocale;
 
 	if (authStore.token) {
 		request.headers.setAuthorization(`Bearer ${authStore.token}`);

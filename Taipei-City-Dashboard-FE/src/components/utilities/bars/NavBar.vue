@@ -9,14 +9,17 @@ import { useRoute } from "vue-router";
 import { useFullscreen } from "@vueuse/core";
 import { useAuthStore } from "../../../store/authStore";
 import { useDialogStore } from "../../../store/dialogStore";
+import { useI18n } from "../../../composables/useI18n";
 
 import UserSettings from "../../dialogs/UserSettings.vue";
 import ContributorsList from "../../dialogs/ContributorsList.vue";
+import LanguageSwitcher from "../LanguageSwitcher.vue";
 
 const route = useRoute();
 const authStore = useAuthStore();
 const dialogStore = useDialogStore();
 const { isFullscreen, toggle } = useFullscreen();
+const { t } = useI18n();
 
 const linkQuery = computed(() => {
 	const { query } = route;
@@ -57,24 +60,28 @@ const linkQuery = computed(() => {
             authStore.currentPath.includes('component'),
         }"
       >
-        組件瀏覽平台
+        {{ t('navigation.components') }}
       </router-link>
       <router-link
         :to="`/dashboard${
           linkQuery.includes('undefined') ? '' : linkQuery
         }`"
       >
-        儀表板總覽
+        {{ t('navigation.dashboard') }}
       </router-link>
       <router-link
         :to="`/mapview${
           linkQuery.includes('undefined') ? '' : linkQuery
         }`"
       >
-        地圖交叉比對
+        {{ t('navigation.map') }}
       </router-link>
     </div>
     <div class="navbar-user">
+      <LanguageSwitcher 
+        v-if="!(authStore.isMobileDevice && authStore.isNarrowDevice)"
+        class="hide-if-mobile"
+      />
       <button
         v-if="!(authStore.isMobileDevice && authStore.isNarrowDevice)"
         class="hide-if-mobile"
@@ -92,13 +99,13 @@ const linkQuery = computed(() => {
               href="https://tuic.gov.taipei/documentation"
               target="_blank"
               rel="noreferrer"
-            >技術文件</a>
+            >{{ t('common.documentation') }}</a>
           </li>
           <li>
             <button
               @click="dialogStore.showDialog('contributorsList')"
             >
-              專案貢獻者
+              {{ t('common.contributors') }}
             </button>
           </li>
         </ul>
@@ -119,7 +126,7 @@ const linkQuery = computed(() => {
         <ul>
           <li>
             <button @click="dialogStore.showDialog('userSettings')">
-              用戶設定
+              {{ t('common.settings') }}
             </button>
           </li>
           <li
@@ -130,7 +137,7 @@ const linkQuery = computed(() => {
             class="hide-if-mobile"
           >
             <router-link to="/admin">
-              管理員後臺
+              {{ t('navigation.admin') }}
             </router-link>
           </li>
           <li
@@ -138,12 +145,12 @@ const linkQuery = computed(() => {
             class="hide-if-mobile"
           >
             <router-link to="/dashboard">
-              返回儀表板
+              {{ t('common.backToDashboard') }}
             </router-link>
           </li>
           <li>
             <button @click="authStore.handleLogout">
-              登出
+              {{ t('common.logout') }}
             </button>
           </li>
         </ul>
@@ -158,7 +165,7 @@ const linkQuery = computed(() => {
         class="navbar-user-user"
       >
         <button @click="dialogStore.showDialog('login')">
-          登入
+          {{ t('common.login') }}
         </button>
       </div>
     </div>

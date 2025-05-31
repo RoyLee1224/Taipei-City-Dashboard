@@ -11,6 +11,8 @@ interface CityConfig {
     tagList: string[];
 }
 
+type TranslationFunction = (key: string, fallback?: string) => string;
+
 export class CityManager {
     private cities: City[] = [
         { name: "臺北市", value: "taipei" },
@@ -62,6 +64,8 @@ export class CityManager {
         ],
     ]);
 
+    private t: TranslationFunction | null = null;
+
     constructor(options?: { cities?: City[]; configs?: Map<string, CityConfig> }) {
 		if (options?.cities) {
 			this.cities = options.cities;
@@ -70,6 +74,10 @@ export class CityManager {
 			this.configs = options.configs;
 		}
 	}
+
+    setTranslationFunction(translationFunction: TranslationFunction) {
+        this.t = translationFunction;
+    }
 
     get activeCities() {
         return Array.from(this.configs.entries())
@@ -108,12 +116,33 @@ export class CityManager {
         return result ? [result] : [];
     }
 
-	// Get expanded name of the city
+	// Get expanded name of the city with translation support
 	getExpandedNameName(key: string): string {
+        if (this.t) {
+            // Use translation function if available
+            const translationKey = `cities.${key}Dashboard`;
+            const translated = this.t(translationKey);
+            // If translation exists and is different from the key, return it
+            if (translated && translated !== translationKey) {
+                return translated;
+            }
+        }
+        // Fallback to original config
         return this.configs.get(key)?.expandedName || key;
     }
-	// Get collapsed name of the city
+	
+	// Get collapsed name of the city with translation support
 	getCollapsedName(key: string): string {
+        if (this.t) {
+            // Use translation function if available
+            const translationKey = `cities.${key}`;
+            const translated = this.t(translationKey);
+            // If translation exists and is different from the key, return it
+            if (translated && translated !== translationKey) {
+                return translated;
+            }
+        }
+        // Fallback to original config
         return this.configs.get(key)?.collapsedName || key;
     }
 

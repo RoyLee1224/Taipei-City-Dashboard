@@ -5,6 +5,7 @@
 <script setup>
 import { ref, computed } from "vue";
 import { useDialogStore } from "../../store/dialogStore";
+import { useI18n } from "../../composables/useI18n";
 
 import { jsonToCsv } from "../../assets/utilityFunctions/jsonToCsv";
 import DialogContainer from "./DialogContainer.vue";
@@ -12,6 +13,7 @@ import DialogContainer from "./DialogContainer.vue";
 const props = defineProps(["content"]);
 
 const dialogStore = useDialogStore();
+const { t } = useI18n();
 const content = computed(() => props.content || dialogStore.moreInfoContent);
 
 // Stores the inputted dashboard name
@@ -56,9 +58,9 @@ function handleClose() {
     @on-close="handleClose"
   >
     <div class="downloaddata">
-      <h2>下載資料</h2>
+      <h2>{{ t('downloadData.title') }}</h2>
       <div class="downloaddata-input">
-        <h3>請輸入檔名</h3>
+        <h3>{{ t('downloadData.enterFileName') }}</h3>
         <input
           v-model="name"
           type="text"
@@ -66,7 +68,7 @@ function handleClose() {
           required
         >
       </div>
-      <h3>請選擇檔案格式</h3>
+      <h3>{{ t('downloadData.selectFileFormat') }}</h3>
       <div>
         <input
           id="JSON"
@@ -96,7 +98,7 @@ function handleClose() {
           class="downloaddata-control-cancel"
           @click="handleClose"
         >
-          取消
+          {{ t('downloadData.cancel') }}
         </button>
         <button
           v-if="name && fileType === 'JSON'"
@@ -106,7 +108,7 @@ function handleClose() {
           <a
             :href="`data:application/json;charset=utf-8,${parsedJson}`"
             :download="`${name}.json`"
-          >下載JSON</a>
+          >{{ t('downloadData.downloadJSON') }}</a>
         </button>
         <button
           v-if="name && fileType === 'CSV'"
@@ -116,7 +118,7 @@ function handleClose() {
           <a
             :href="`data:text/csv;charset=utf-8,${parsedCsv}`"
             :download="`${name}.csv`"
-          >下載CSV</a>
+          >{{ t('downloadData.downloadCSV') }}</a>
         </button>
       </div>
     </div>
