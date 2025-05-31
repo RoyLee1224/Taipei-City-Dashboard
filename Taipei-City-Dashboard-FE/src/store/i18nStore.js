@@ -255,8 +255,8 @@ export const useI18nStore = defineStore('i18n', () => {
   const isLoadingTranslations = ref(false);
   const translationsLoaded = ref(false);
 
-  // 從 API 載入組件翻譯
-  const loadComponentTranslations = async (languageCode = currentLocale.value) => {
+  // 從 API 載入組件翻譯（帶重試機制）
+  const loadComponentTranslations = async (languageCode = currentLocale.value, retryCount = 0) => {
     if (languageCode === 'zh-TW') {
       // 中文不需要從 API 載入，但要確保狀態正確
       translationsLoaded.value = false;
@@ -266,7 +266,7 @@ export const useI18nStore = defineStore('i18n', () => {
     // 移除 translationsLoaded.value 的檢查，允許重新載入
     isLoadingTranslations.value = true;
     try {
-      console.log('Loading translations for:', languageCode);
+      console.log('Loading translations for:', languageCode, retryCount > 0 ? `(retry ${retryCount})` : '');
       console.log('API call URL:', `/translation/components?language_code=${languageCode}`);
       
       const response = await http.get(`/translation/components?language_code=${languageCode}`);
@@ -293,23 +293,34 @@ export const useI18nStore = defineStore('i18n', () => {
         translationsLoaded.value = true;
         
         console.log('Component translations loaded:', componentTranslations);
+      } else {
+        throw new Error(`API returned status: ${response.data.status}`);
       }
     } catch (error) {
       console.error('Failed to load component translations:', error);
+      
+      // 重試機制：最多重試 2 次
+      if (retryCount < 2) {
+        console.log(`Retrying component translations load (attempt ${retryCount + 1})`);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // 等待 1 秒後重試
+        return loadComponentTranslations(languageCode, retryCount + 1);
+      } else {
+        console.error('Failed to load component translations after 3 attempts');
+      }
     } finally {
       isLoadingTranslations.value = false;
     }
   };
 
-  // 從 API 載入儀表板翻譯
-  const loadDashboardTranslations = async (languageCode = currentLocale.value) => {
+  // 從 API 載入儀表板翻譯（帶重試機制）
+  const loadDashboardTranslations = async (languageCode = currentLocale.value, retryCount = 0) => {
     if (languageCode === 'zh-TW') {
       return;
     }
     
     isLoadingTranslations.value = true;
     try {
-      console.log('Loading dashboard translations for:', languageCode);
+      console.log('Loading dashboard translations for:', languageCode, retryCount > 0 ? `(retry ${retryCount})` : '');
       console.log('API call URL:', `/translation/dashboards?language_code=${languageCode}`);
       
       const response = await http.get(`/translation/dashboards?language_code=${languageCode}`);
@@ -335,9 +346,20 @@ export const useI18nStore = defineStore('i18n', () => {
         messages.value[languageCode].data.dashboards = dashboardTranslations;
         
         console.log('Dashboard translations loaded:', dashboardTranslations);
+      } else {
+        throw new Error(`API returned status: ${response.data.status}`);
       }
     } catch (error) {
       console.error('Failed to load dashboard translations:', error);
+      
+      // 重試機制：最多重試 2 次
+      if (retryCount < 2) {
+        console.log(`Retrying dashboard translations load (attempt ${retryCount + 1})`);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // 等待 1 秒後重試
+        return loadDashboardTranslations(languageCode, retryCount + 1);
+      } else {
+        console.error('Failed to load dashboard translations after 3 attempts');
+      }
     } finally {
       isLoadingTranslations.value = false;
     }
@@ -358,24 +380,54 @@ export const useI18nStore = defineStore('i18n', () => {
 
   // 切換語言
   const setLocale = async (locale) => {
-    currentLocale.value = locale;
-    localStorage.setItem('locale', locale);
+    console.log(`Starting language switch to: ${locale}`);
     
-    // 重要修正：切換語言時重置翻譯狀態
-    if (locale === 'zh-TW') {
-      // 切換回中文時，清除所有動態翻譯並重置狀態
-      translationsLoaded.value = false;
-      // 清空英文組件翻譯
-      if (messages.value['en-US']?.data?.components) {
-        messages.value['en-US'].data.components = {};
+    // 設置載入狀態
+    isLoadingTranslations.value = true;
+    
+    try {
+      currentLocale.value = locale;
+      localStorage.setItem('locale', locale);
+      
+      // 重要修正：切換語言時重置翻譯狀態
+      if (locale === 'zh-TW') {
+        // 切換回中文時，清除所有動態翻譯並重置狀態
+        translationsLoaded.value = false;
+        // 清空英文組件翻譯
+        if (messages.value['en-US']?.data?.components) {
+          messages.value['en-US'].data.components = {};
+        }
+        if (messages.value['en-US']?.data?.dashboards) {
+          messages.value['en-US'].data.dashboards = {};
+        }
+        console.log('Switched to Chinese, cleared translations');
+      } else {
+        // 切換到其他語言時也重置狀態，確保重新載入
+        translationsLoaded.value = false;
+        console.log('Loading translations for non-Chinese language');
+        await loadAllTranslations(locale);
+        console.log('All translations loaded successfully');
       }
-      if (messages.value['en-US']?.data?.dashboards) {
-        messages.value['en-US'].data.dashboards = {};
-      }
-    } else {
-      // 切換到其他語言時也重置狀態，確保重新載入
-      translationsLoaded.value = false;
-      await loadAllTranslations(locale);
+      
+      // 觸發內容重新載入
+      await triggerContentRefresh();
+      
+    } catch (error) {
+      console.error('Error during language switch:', error);
+    } finally {
+      isLoadingTranslations.value = false;
+      console.log(`Language switch to ${locale} completed`);
+    }
+  };
+
+  // 觸發內容重新載入
+  const triggerContentRefresh = async () => {
+    // 這個函數會被 contentStore 或其他組件使用
+    // 發送一個事件通知所有組件重新載入翻譯
+    if (typeof window !== 'undefined' && window.dispatchEvent) {
+      window.dispatchEvent(new CustomEvent('languageChanged', {
+        detail: { locale: currentLocale.value }
+      }));
     }
   };
 
@@ -426,6 +478,7 @@ export const useI18nStore = defineStore('i18n', () => {
     t,
     loadComponentTranslations,
     getComponentTranslationById,
-    loadAllTranslations
+    loadAllTranslations,
+    triggerContentRefresh
   };
 }); 

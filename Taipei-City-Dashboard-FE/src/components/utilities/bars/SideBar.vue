@@ -70,8 +70,11 @@ watch(
 // Watch for language changes and reinitialize translation
 watch(
 	() => i18nStore.currentLocale,
-	async () => {
+	async (newLocale) => {
+		console.log('SideBar: Language changed to', newLocale);
 		await contentStore.initializeTranslation();
+		// 強制刷新翻譯內容
+		await contentStore.forceRefreshTranslations();
 	}
 );
 
@@ -83,6 +86,14 @@ onMounted(async () => {
 		isExpanded.value = false;
 	} else {
 		isExpanded.value = true;
+	}
+	
+	// 監聽語言變更事件
+	if (typeof window !== 'undefined') {
+		window.addEventListener('languageChanged', async (event) => {
+			console.log('SideBar: Received languageChanged event', event.detail);
+			await contentStore.forceRefreshTranslations();
+		});
 	}
 });
 </script>

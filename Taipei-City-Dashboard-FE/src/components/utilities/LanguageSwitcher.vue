@@ -1,8 +1,17 @@
 <template>
   <div class="language-switcher">
-    <button @click="toggleLanguage" class="language-button">
-      <span class="language-icon">language</span>
-      <span class="language-text">{{ getCurrentLanguageName() }}</span>
+    <button 
+      @click="toggleLanguage" 
+      class="language-button"
+      :disabled="i18nStore.isLoadingTranslations"
+      :class="{ 'loading': i18nStore.isLoadingTranslations }"
+    >
+      <span class="language-icon">
+        {{ i18nStore.isLoadingTranslations ? 'hourglass_empty' : 'language' }}
+      </span>
+      <span class="language-text">
+        {{ i18nStore.isLoadingTranslations ? '載入中...' : getCurrentLanguageName() }}
+      </span>
     </button>
   </div>
 </template>
@@ -14,11 +23,18 @@ import { storeToRefs } from 'pinia';
 const i18nStore = useI18nStore();
 const { currentLocale, availableLocales } = storeToRefs(i18nStore);
 
-const toggleLanguage = () => {
+const toggleLanguage = async () => {
+  if (i18nStore.isLoadingTranslations) return; // 防止重複切換
+  
   // 在中英文之間切換
   const newLocale = currentLocale.value === 'zh-TW' ? 'en-US' : 'zh-TW';
   console.log('Switching language from', currentLocale.value, 'to', newLocale);
-  i18nStore.setLocale(newLocale);
+  
+  try {
+    await i18nStore.setLocale(newLocale);
+  } catch (error) {
+    console.error('Error during language switch:', error);
+  }
 };
 
 const getCurrentLanguageName = () => {
@@ -46,8 +62,19 @@ const getCurrentLanguageName = () => {
     transition: background-color 0.25s;
     min-width: 90px;
 
-    &:hover {
+    &:hover:not(:disabled) {
       background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    &.loading {
+      .language-icon {
+        animation: spin 1s linear infinite;
+      }
     }
 
     .language-icon {
@@ -64,6 +91,15 @@ const getCurrentLanguageName = () => {
       text-align: center;
       flex-shrink: 0;
     }
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 

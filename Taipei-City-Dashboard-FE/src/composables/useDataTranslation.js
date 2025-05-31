@@ -175,8 +175,9 @@ export function useDataTranslation() {
   // 確保翻譯資料已載入
   const ensureTranslationsLoaded = async () => {
     if (i18nStore.currentLocale !== 'zh-TW') {
-      await i18nStore.loadComponentTranslations();
+      await i18nStore.loadAllTranslations();
     }
+    return i18nStore;
   };
 
   return {

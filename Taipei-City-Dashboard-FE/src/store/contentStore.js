@@ -71,6 +71,7 @@ export const useContentStore = defineStore("content", {
 	actions: {
 		// Initialize translation function for cityManager
 		async initializeTranslation() {
+			console.log('Initializing translation...');
 			const i18nStore = useI18nStore();
 			this.cityManager.setTranslationFunction(i18nStore.t);
 			
@@ -79,7 +80,9 @@ export const useContentStore = defineStore("content", {
 			
 			// 重要：強制重新載入翻譯
 			if (i18nStore.currentLocale !== 'zh-TW') {
+				console.log('Loading translations for current locale:', i18nStore.currentLocale);
 				await ensureTranslationsLoaded();
+				console.log('Translations loaded, updating content...');
 			}
 			
 			// 重新翻譯現有的儀表板資料（無論什麼語言都要重新翻譯）
@@ -87,6 +90,7 @@ export const useContentStore = defineStore("content", {
 			// 重新翻譯個人儀表板
 			if (this.personalDashboards && this.personalDashboards.length > 0) {
 				this.personalDashboards = translateDashboards(this.personalDashboards);
+				console.log('Personal dashboards translated');
 				
 				// 重新設定收藏儀表板
 				if (this.personalDashboards.length !== 0) {
@@ -106,12 +110,16 @@ export const useContentStore = defineStore("content", {
 					this.dashboards.set(key, translatedDashboards);
 				}
 			});
+			console.log('City dashboards translated');
 			
 			// 重新翻譯當前儀表板的組件
 			if (this.cityDashboard.components) {
 				const { translateComponentData } = useDataTranslation();
 				this.cityDashboard.components = this.cityDashboard.components.map(translateComponentData);
+				console.log('Current dashboard components translated');
 			}
+			
+			console.log('Translation initialization completed');
 		},
 		setComponentData(index, component) {
 			this.currentDashboard.components[index] = component;
@@ -816,6 +824,22 @@ export const useContentStore = defineStore("content", {
 			// 在設定資料後進行翻譯
 			const { translateDashboard } = useDataTranslation();
 			this.currentDashboard = translateDashboard(this.currentDashboard);
+		},
+		// 強制刷新所有翻譯內容
+		async forceRefreshTranslations() {
+			console.log('Force refreshing all translations...');
+			
+			// 重新載入儀表板資料並翻譯
+			if (this.dashboards.size > 0) {
+				await this.setDashboards(true); // 只重新載入儀表板，不重新導航
+			}
+			
+			// 如果有當前儀表板，重新載入其內容
+			if (this.currentDashboard.index) {
+				await this.setCurrentDashboardAllContent();
+			}
+			
+			console.log('Force refresh completed');
 		},
 	},
 	debounce: {
