@@ -70,12 +70,15 @@ export const useContentStore = defineStore("content", {
 	getters: {},
 	actions: {
 		// Initialize translation function for cityManager
-		initializeTranslation() {
+		async initializeTranslation() {
 			const i18nStore = useI18nStore();
 			this.cityManager.setTranslationFunction(i18nStore.t);
 			
+			// 載入翻譯資料
+			const { translateDashboards, ensureTranslationsLoaded } = useDataTranslation();
+			await ensureTranslationsLoaded();
+			
 			// 重新翻譯現有的儀表板資料
-			const { translateDashboards } = useDataTranslation();
 			
 			// 重新翻譯個人儀表板
 			if (this.personalDashboards && this.personalDashboards.length > 0) {

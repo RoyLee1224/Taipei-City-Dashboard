@@ -68,14 +68,14 @@ watch(
 // Watch for language changes and reinitialize translation
 watch(
 	() => i18nStore.currentLocale,
-	() => {
-		contentStore.initializeTranslation();
+	async () => {
+		await contentStore.initializeTranslation();
 	}
 );
 
-onMounted(() => {
+onMounted(async () => {
 	initializeCollapsedStates();
-	contentStore.initializeTranslation();
+	await contentStore.initializeTranslation();
 	const storedExpandedState = localStorage.getItem("isExpanded");
 	if (storedExpandedState === "false") {
 		isExpanded.value = false;

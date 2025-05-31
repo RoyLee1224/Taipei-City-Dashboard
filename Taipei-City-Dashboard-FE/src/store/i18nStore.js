@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import http from '../router/axios';
 
 export const useI18nStore = defineStore('i18n', () => {
   const currentLocale = ref(localStorage.getItem('locale') || 'zh-TW');
@@ -124,6 +125,10 @@ export const useI18nStore = defineStore('i18n', () => {
         title: '專案貢獻者清單',
         clickToLearnMore: '點擊貢獻者頭貼以了解更多',
         contributor: '貢獻者'
+      },
+      // 動態載入的組件翻譯
+      data: {
+        components: {}
       }
     },
     'en-US': {
@@ -238,14 +243,80 @@ export const useI18nStore = defineStore('i18n', () => {
         title: 'Project Contributors List',
         clickToLearnMore: 'Click contributor avatar to learn more',
         contributor: 'Contributor'
+      },
+      // 動態載入的組件翻譯
+      data: {
+        components: {}
       }
     }
   });
 
+  // 載入翻譯資料的狀態
+  const isLoadingTranslations = ref(false);
+  const translationsLoaded = ref(false);
+
+  // 從 API 載入組件翻譯
+  const loadComponentTranslations = async (languageCode = currentLocale.value) => {
+    if (languageCode === 'zh-TW' || translationsLoaded.value) {
+      return; // 中文是預設語言，不需要從 API 載入
+    }
+
+    isLoadingTranslations.value = true;
+    try {
+      console.log('Loading translations for:', languageCode);
+      console.log('API call URL:', `/translation/components?language_code=${languageCode}`);
+      
+      // 直接在 URL 中指定參數，避免與 axios 攔截器衝突
+      const response = await http.get(`/translation/components?language_code=${languageCode}`);
+
+      console.log('Translation API response:', response);
+
+      if (response.data.status === 'success') {
+        // 轉換 API 回傳的格式 (component_id -> name_translation) 
+        // 到我們需要的格式 (name -> translation)
+        const apiTranslations = response.data.data;
+        const componentTranslations = {};
+        
+        // 這裡可能需要額外的邏輯來將 component_id 對應到 component name
+        // 目前先直接使用 ID 作為 key
+        Object.entries(apiTranslations).forEach(([componentId, translation]) => {
+          componentTranslations[componentId] = translation;
+        });
+
+        // 更新翻譯資料
+        if (!messages.value[languageCode]) {
+          messages.value[languageCode] = { data: { components: {} } };
+        }
+        if (!messages.value[languageCode].data) {
+          messages.value[languageCode].data = { components: {} };
+        }
+        
+        messages.value[languageCode].data.components = componentTranslations;
+        translationsLoaded.value = true;
+        
+        console.log('Component translations loaded:', componentTranslations);
+      }
+    } catch (error) {
+      console.error('Failed to load component translations:', error);
+      console.error('Error details:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        config: error.config
+      });
+    } finally {
+      isLoadingTranslations.value = false;
+    }
+  };
+
   // 切換語言
-  const setLocale = (locale) => {
+  const setLocale = async (locale) => {
     currentLocale.value = locale;
     localStorage.setItem('locale', locale);
+    
+    // 載入翻譯資料
+    await loadComponentTranslations(locale);
   };
 
   // 翻譯函數
@@ -276,11 +347,24 @@ export const useI18nStore = defineStore('i18n', () => {
     return value || fallback;
   };
 
+  // 根據組件 ID 獲取翻譯
+  const getComponentTranslationById = (componentId) => {
+    if (currentLocale.value === 'zh-TW') {
+      return null; // 中文不需要翻譯
+    }
+    
+    return messages.value[currentLocale.value]?.data?.components?.[componentId] || null;
+  };
+
   return {
     currentLocale,
     availableLocales,
     messages,
+    isLoadingTranslations,
+    translationsLoaded,
     setLocale,
-    t
+    t,
+    loadComponentTranslations,
+    getComponentTranslationById
   };
 }); 

@@ -123,6 +123,7 @@ func MigrateManagerSchema() {
 		DBManager.AutoMigrate(&AuthUser{}, &Role{}, &Group{})
 		DBManager.AutoMigrate(&AuthUserGroupRole{})
 		DBManager.AutoMigrate(&Component{}, &ComponentChart{}, &ComponentMap{})
+		DBManager.AutoMigrate(&ComponentTranslation{})
 		DBManager.AutoMigrate(&Contributor{})
 		DBManager.AutoMigrate(&Dashboard{}, &DashboardGroup{}, &Issue{}, &QueryCharts{})
 		DBManager.AutoMigrate(&ViewPoints{})
