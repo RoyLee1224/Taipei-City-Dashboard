@@ -96,6 +96,9 @@ export const useI18nStore = defineStore('i18n', () => {
         metrotaipei: '雙北',
         newtaipei: '新北',
         taoyuan: '桃園',
+        taipeiCity: '臺北市',
+        newtaipeiCity: '新北市',
+        taoyuanCity: '桃園市',
         taipeiDashboard: '臺北儀表板',
         metrotaipeiDashboard: '雙北儀表板示範',
         newtaipeiDashboard: '新北儀表板',
@@ -138,9 +141,61 @@ export const useI18nStore = defineStore('i18n', () => {
         privacyPolicy: '隱私權政策',
         slogan: '《讓臺北城市儀表板成為您的儀表板》'
       },
+      mobileLayer: {
+        basicLayers: '基本圖層'
+      },
+      mapView: {
+        basicLayers: '基本圖層',
+        noSpatialData: '無空間資料組件',
+        noSpatialDataNotification: '本組件沒有空間資料，不會渲染地圖',
+        errorLoading: '發生錯誤，無法載入儀表板',
+        noComponents: '尚未加入組件',
+        addFirstComponent: '加入您的第一個組件',
+        addToFavorites: '點擊其他儀表板組件之愛心以新增至收藏組件'
+      },
+      dashboardComponent: {
+        componentInfo: '組件資訊',
+        componentInfoAndFeatures: '組件資訊與功能',
+        fixedData: '固定資料',
+        realTimeData: '即時資料',
+        demoData: '示範靜態資料',
+        maintenance: '維護修復中',
+        updatePrefix: '每',
+        updateSuffix: '更新',
+        irregularUpdate: '不定期更新',
+        dataError: '組件資料異常',
+        filterMap: '篩選地圖',
+        spatialData: '空間資料',
+        spatialDataAvailable: '具備空間資料',
+        historyData: '歷史資料',
+        historyDataAvailable: '具備歷史資料',
+        chartTypes: {
+          DonutChart: '圓餅圖',
+          BarChart: '橫向長條圖',
+          ColumnChart: '縱向長條圖',
+          BarPercentChart: '長條圖(%)',
+          TreemapChart: '矩形圖',
+          DistrictChart: '行政區圖',
+          MetroChart: '捷運行駛圖',
+          TimelineSeparateChart: '折線圖(比較)',
+          TimelineStackedChart: '折線圖(堆疊)',
+          GuageChart: '量表圖',
+          RadarChart: '雷達圖',
+          HeatmapChart: '熱力圖',
+          PolarAreaChart: '極座標圖',
+          ColumnLineChart: '長條折線圖',
+          BarChartWithGoal: '長條圖(目標)',
+          IconPercentChart: '圖示比例圖',
+          SpeedometerChart: '儀表板圖',
+          IndicatorChart: '指標圖',
+          MapLegend: '地圖圖例',
+          TextUnitChart: '文字數值圖'
+        }
+      },
       // 動態載入的組件翻譯
       data: {
-        components: {}
+        components: {},
+        dashboards: {}
       }
     },
     'en-US': {
@@ -226,6 +281,9 @@ export const useI18nStore = defineStore('i18n', () => {
         metrotaipei: 'Metro Taipei',
         newtaipei: 'New Taipei',
         taoyuan: 'Taoyuan',
+        taipeiCity: 'Taipei City',
+        newtaipeiCity: 'New Taipei City',
+        taoyuanCity: 'Taoyuan City',
         taipeiDashboard: 'Taipei',
         metrotaipeiDashboard: 'Metro Taipei',
         newtaipeiDashboard: 'New Taipei',
@@ -268,9 +326,61 @@ export const useI18nStore = defineStore('i18n', () => {
         privacyPolicy: 'Privacy Policy',
         slogan: '《Let Taipei City Dashboard be Your Dashboard》'
       },
+      mobileLayer: {
+        basicLayers: 'Basic Layers'
+      },
+      mapView: {
+        basicLayers: 'Basic Layers',
+        noSpatialData: 'No Spatial Data Component',
+        noSpatialDataNotification: 'This component has no spatial data and will not render the map',
+        errorLoading: 'Error occurred, unable to load dashboard',
+        noComponents: 'No components added',
+        addFirstComponent: 'Add your first component',
+        addToFavorites: 'Click the heart on other dashboard components to add to favorites'
+      },
+      dashboardComponent: {
+        componentInfo: 'Component Info',
+        componentInfoAndFeatures: 'Component Info and Features',
+        fixedData: 'Fixed Data',
+        realTimeData: 'Real-Time Data',
+        demoData: 'Demo Static Data',
+        maintenance: 'Maintenance',
+        updatePrefix: 'Updates every ',
+        updateSuffix: '',
+        irregularUpdate: 'Irregular Updates',
+        dataError: 'Component Data Error',
+        filterMap: 'Filter Map',
+        spatialData: 'Spatial Data',
+        spatialDataAvailable: 'Spatial Data Available',
+        historyData: 'History Data',
+        historyDataAvailable: 'History Data Available',
+        chartTypes: {
+          DonutChart: 'Donut Chart',
+          BarChart: 'Bar Chart',
+          ColumnChart: 'Column Chart',
+          BarPercentChart: 'Bar Percent Chart',
+          TreemapChart: 'Treemap Chart',
+          DistrictChart: 'District Chart',
+          MetroChart: 'Metro Chart',
+          TimelineSeparateChart: 'Timeline Separate Chart',
+          TimelineStackedChart: 'Timeline Stacked Chart',
+          GuageChart: 'Guage Chart',
+          RadarChart: 'Radar Chart',
+          HeatmapChart: 'Heatmap Chart',
+          PolarAreaChart: 'Polar Area Chart',
+          ColumnLineChart: 'Column Line Chart',
+          BarChartWithGoal: 'Bar Chart with Goal',
+          IconPercentChart: 'Icon Percent Chart',
+          SpeedometerChart: 'Speedometer Chart',
+          IndicatorChart: 'Indicator Chart',
+          MapLegend: 'Map Legend',
+          TextUnitChart: 'Text Unit Chart'
+        }
+      },
       // 動態載入的組件翻譯
       data: {
-        components: {}
+        components: {},
+        dashboards: {}
       }
     }
   });

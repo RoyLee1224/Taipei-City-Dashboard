@@ -5,7 +5,8 @@ import { computed, ref } from "vue";
 import "material-icons/iconfont/material-icons.css";
 import { getComponentDataTimeframe } from "./utilities/dataTimeframe";
 import { timeTerms } from "./utilities/AllTimes";
-import { chartTypes } from "./utilities/chartTypes";
+import { useDataTranslation } from "../composables/useDataTranslation";
+import { useI18n } from "../composables/useI18n";
 
 import ComponentTag from "./components/ComponentTag.vue";
 import TagTooltip from "./components/TagTooltip.vue";
@@ -110,16 +111,19 @@ const toggleOn = computed({
 const mousePosition = ref({ x: null, y: null });
 const showTagTooltip = ref(false);
 
+const { translateComponentById } = useDataTranslation();
+const { t } = useI18n();
+
 // Parses time data into display format
 const dataTime = computed(() => {
 	if (props.config.time_from === "static") {
-		return "固定資料";
+		return t('dashboardComponent.fixedData');
 	} else if (props.config.time_from === "current") {
-		return "即時資料";
+		return t('dashboardComponent.realTimeData');
 	} else if (props.config.time_from === "demo") {
-		return "示範靜態資料";
+		return t('dashboardComponent.demoData');
 	} else if (props.config.time_from === "maintain") {
-		return "維護修復中";
+		return t('dashboardComponent.maintenance');
 	}
 	const { timefrom, timeto } = getComponentDataTimeframe(
 		props.config.time_from,
@@ -134,11 +138,9 @@ const dataTime = computed(() => {
 // Parses update frequency data into display format
 const updateFreq = computed(() => {
 	if (props.config.update_freq && props.config.update_freq_unit) {
-		return `每${props.config.update_freq}${
-			timeTerms[props.config.update_freq_unit]
-		}更新`;
+		return `${t('dashboardComponent.updatePrefix')}${props.config.update_freq}${timeTerms[props.config.update_freq_unit]}${t('dashboardComponent.updateSuffix')}`;
 	} else {
-		return "不定期更新";
+		return t('dashboardComponent.irregularUpdate');
 	}
 });
 
@@ -224,6 +226,41 @@ function returnChartComponent(name, svg) {
 		return svg ? MapLegendSvg : MapLegend;
 	}
 }
+
+// 翻譯組件名稱
+const translatedComponentName = computed(() => {
+	const translatedComponent = translateComponentById(props.config);
+	return translatedComponent.name;
+});
+
+// 翻譯按鈕文字
+const translatedInfoBtnText = computed(() => {
+	return props.infoBtnText === "組件資訊" ? t('dashboardComponent.componentInfo') : props.infoBtnText;
+});
+
+// 翻譯城市名稱
+const translateCityName = (cityName) => {
+	if (!cityName) return cityName;
+	
+	// 創建映射表來處理常見的城市名稱
+	const cityMap = {
+		'臺北市': t('cities.taipeiCity'),
+		'新北市': t('cities.newtaipeiCity'),
+		'桃園市': t('cities.taoyuanCity'),
+		'臺北': t('cities.taipei'),
+		'新北': t('cities.newtaipei'),
+		'桃園': t('cities.taoyuan'),
+		'雙北': t('cities.metrotaipei')
+	};
+	
+	return cityMap[cityName] || cityName;
+};
+
+// 翻譯圖表類型
+const translateChartType = (chartType) => {
+	if (!chartType) return chartType;
+	return t(`dashboardComponent.chartTypes.${chartType}`) || chartType;
+};
 </script>
 
 <template>
@@ -246,7 +283,7 @@ function returnChartComponent(name, svg) {
       <!-- Upper Left Corner -->
       <div>
         <h3>
-          {{ config.name }}
+          {{ translatedComponentName }}
           <ComponentTag
             v-if="!mode.includes('map')"
             icon=""
@@ -268,7 +305,7 @@ function returnChartComponent(name, svg) {
           {{ props.config.short_desc }}
         </p>
         <div v-if="!mode.includes('map') || toggleOn">
-          <h4 v-if="dataTime === '維護修復中'">
+          <h4 v-if="dataTime === t('dashboardComponent.maintenance')">
             {{ `${config.source} | ` }}<span>warning</span>
             <h4>{{ `${dataTime}` }}</h4>
             <span>warning</span>
@@ -281,10 +318,10 @@ function returnChartComponent(name, svg) {
             class="city-tag-container"
           >
             <ComponentTag
-              v-for=" city in props.cityTag"
-              :key="city"
+              v-for="city in props.cityTag"
+              :key="city.value"
               :icon="''"
-              :text="city.name"
+              :text="translateCityName(city.name)"
               :mode="'small'"
               :class="`city-tag-item ${city.value}`"
             />
@@ -298,7 +335,7 @@ function returnChartComponent(name, svg) {
       >
         <button
           v-if="addBtn"
-          @click="$emit('add', config.id, config.name)"
+          @click="$emit('add', config.id, translatedComponentName)"
         >
           <span>add_circle</span>
         </button>
@@ -353,7 +390,7 @@ function returnChartComponent(name, svg) {
           :key="city.value"
         >
           <option :value="city.value">
-            {{ city.name }}
+            {{ translateCityName(city.name) }}
           </option>
         </template>
       </select>
@@ -370,7 +407,7 @@ function returnChartComponent(name, svg) {
           }"
           @click="changeActiveChart(item)"
         >
-          {{ chartTypes[item] }}
+          {{ translateChartType(item) }}
         </button>
       </div>
     </div>
@@ -390,7 +427,7 @@ function returnChartComponent(name, svg) {
             v-for="city in props.cityTag"
             :key="city.value"
             :icon="''"
-            :text="city.name"
+            :text="translateCityName(city.name)"
             :mode="'small'"
             :class="`city-tag-item ${city.value}`"
           />
@@ -455,7 +492,7 @@ function returnChartComponent(name, svg) {
       }"
     >
       <span>error</span>
-      <p>組件資料異常</p>
+      <p>{{ t('dashboardComponent.dataError') }}</p>
     </div>
     <div
       v-else-if="toggleOn || !mode.includes('map')"
@@ -481,19 +518,19 @@ function returnChartComponent(name, svg) {
         <ComponentTag
           v-if="config.map_filter && config.map_config?.length > 0"
           :icon="mode === 'preview' ? '' : 'tune'"
-          text="篩選地圖"
+          :text="t('dashboardComponent.filterMap')"
           class="hide-if-mobile"
         />
         <ComponentTag
           v-if="config.map_config && config.map_config[0] !== null && config.map_config?.length > 0"
           :icon="mode === 'preview' ? '' : 'map'"
-          text="空間資料"
+          :text="t('dashboardComponent.spatialData')"
           class="hide-if-mobile"
         />
         <ComponentTag
           v-if="config.history_config?.range"
           :icon="mode === 'preview' ? '' : 'insights'"
-          text="歷史資料"
+          :text="t('dashboardComponent.historyData')"
           class="history-tag"
         />
       </div>
@@ -502,7 +539,7 @@ function returnChartComponent(name, svg) {
         v-if="infoBtn"
         @click="$emit('info', config)"
       >
-        <p>{{ infoBtnText }}</p>
+        <p>{{ translatedInfoBtnText }}</p>
         <span>arrow_circle_right</span>
       </button>
     </div>

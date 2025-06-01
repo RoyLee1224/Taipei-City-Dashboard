@@ -17,6 +17,7 @@ import DashboardComponent from "../dashboardComponent/DashboardComponent.vue";
 import { useContentStore } from "../store/contentStore";
 import { useDialogStore } from "../store/dialogStore";
 import { useMapStore } from "../store/mapStore";
+import { useI18n } from "../composables/useI18n";
 import MapContainer from "../components/map/MapContainer.vue";
 import MoreInfo from "../components/dialogs/MoreInfo.vue";
 import ReportIssue from "../components/dialogs/ReportIssue.vue";
@@ -25,6 +26,7 @@ const contentStore = useContentStore();
 const dialogStore = useDialogStore();
 const mapStore = useMapStore();
 const route = useRoute();
+const { t } = useI18n();
 
 const toggleOn = ref({
 	hasMap: [],
@@ -70,7 +72,7 @@ function handleToggle(value, map_config) {
 		if (value) {
 			dialogStore.showNotification(
 				"info",
-				"本組件沒有空間資料，不會渲染地圖"
+				t('mapView.noSpatialDataNotification')
 			);
 		}
 		return;
@@ -260,7 +262,7 @@ function shouldDisable(map_config) {
           "
         />
         <h2 v-if="contentStore.mapLayers.length > 0">
-          基本圖層
+          {{ t('mapView.basicLayers') }}
         </h2>
         <DashboardComponent
           v-for="(item, arrayIdx) in contentStore.mapLayers"
@@ -329,7 +331,7 @@ function shouldDisable(map_config) {
           "
         />
         <h2 v-if="parseMapLayers.noMap?.length > 0">
-          無空間資料組件
+          {{ t('mapView.noSpatialData') }}
         </h2>
         <DashboardComponent
           v-for="(item, arrayIdx) in parseMapLayers.noMap"
@@ -382,7 +384,7 @@ function shouldDisable(map_config) {
         class="map-charts-nodashboard"
       >
         <span>sentiment_very_dissatisfied</span>
-        <h2>發生錯誤，無法載入儀表板</h2>
+        <h2>{{ t('mapView.errorLoading') }}</h2>
       </div>
       <!-- 5. Dashboards that don't have components -->
       <div
@@ -390,16 +392,16 @@ function shouldDisable(map_config) {
         class="map-charts-nodashboard"
       >
         <span>addchart</span>
-        <h2>尚未加入組件</h2>
+        <h2>{{ t('mapView.noComponents') }}</h2>
         <button
           v-if="contentStore.currentDashboard.icon !== 'favorite'"
           class="hide-if-mobile"
           @click="handleOpenSettings"
         >
-          加入您的第一個組件
+          {{ t('mapView.addFirstComponent') }}
         </button>
         <p v-else>
-          點擊其他儀表板組件之愛心以新增至收藏組件
+          {{ t('mapView.addToFavorites') }}
         </p>
       </div>
     </div>
