@@ -38,6 +38,7 @@ func ConfigureRoutes() {
 	configureIncidentRoutes()
 	// configureWsRoutes()
 	configureContributorRoutes()
+	configureTranslationRoutes()
 }
 
 func configureAuthRoutes() {
@@ -177,3 +178,19 @@ func configureContributorRoutes() {
 // 		wsRoutes.PUT("/write/", controllers.WriteMap)
 // 	}
 // }
+
+func configureTranslationRoutes() {
+	translationRoutes := RouterGroup.Group("/translation")
+	// 暫時移除 rate limiting middleware 來測試
+	{
+		translationRoutes.GET("/components", controllers.GetComponentTranslations)
+		translationRoutes.GET("/dashboards", controllers.GetDashboardTranslations)
+	}
+	translationRoutes.Use(middleware.IsSysAdm())
+	{
+		translationRoutes.POST("/components", controllers.CreateComponentTranslation)
+		translationRoutes.PATCH("/components", controllers.UpdateComponentTranslation)
+		translationRoutes.POST("/dashboards", controllers.CreateDashboardTranslation)
+		translationRoutes.PATCH("/dashboards", controllers.UpdateDashboardTranslation)
+	}
+}

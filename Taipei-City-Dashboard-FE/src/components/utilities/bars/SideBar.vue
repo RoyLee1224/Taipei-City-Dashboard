@@ -8,6 +8,7 @@ import { useMapStore } from "../../../store/mapStore";
 import { useAuthStore } from "../../../store/authStore";
 import { useI18nStore } from "../../../store/i18nStore";
 import { useI18n } from "../../../composables/useI18n";
+import { useDataTranslation } from "../../../composables/useDataTranslation";
 
 import SideBarTab from "../miscellaneous/SideBarTab.vue";
 
@@ -17,6 +18,7 @@ const mapStore = useMapStore();
 const authStore = useAuthStore();
 const i18nStore = useI18nStore();
 const { t } = useI18n();
+const { translateDashboard } = useDataTranslation();
 
 // The expanded state is also stored in localstorage to retain the setting after refresh
 const isExpanded = ref(true);
@@ -68,19 +70,30 @@ watch(
 // Watch for language changes and reinitialize translation
 watch(
 	() => i18nStore.currentLocale,
-	() => {
-		contentStore.initializeTranslation();
+	async (newLocale) => {
+		console.log('SideBar: Language changed to', newLocale);
+		await contentStore.initializeTranslation();
+		// 強制刷新翻譯內容
+		await contentStore.forceRefreshTranslations();
 	}
 );
 
-onMounted(() => {
+onMounted(async () => {
 	initializeCollapsedStates();
-	contentStore.initializeTranslation();
+	await contentStore.initializeTranslation();
 	const storedExpandedState = localStorage.getItem("isExpanded");
 	if (storedExpandedState === "false") {
 		isExpanded.value = false;
 	} else {
 		isExpanded.value = true;
+	}
+	
+	// 監聽語言變更事件
+	if (typeof window !== 'undefined') {
+		window.addEventListener('languageChanged', async (event) => {
+			console.log('SideBar: Received languageChanged event', event.detail);
+			await contentStore.forceRefreshTranslations();
+		});
 	}
 });
 </script>
@@ -159,7 +172,7 @@ onMounted(() => {
             )"
             :key="item.index"
             :icon="item.icon"
-            :title="item.name"
+            :title="translateDashboard(item).name"
             :index="item.index"
             :expanded="isExpanded"
           />
@@ -187,7 +200,7 @@ onMounted(() => {
             v-for="item in contentStore.getDashboardsByCity(city)"
             :key="item.index"
             :icon="item.icon"
-            :title="item.name"
+            :title="translateDashboard(item).name"
             :index="item.index"
             :city="city"
             :expanded="isExpanded"

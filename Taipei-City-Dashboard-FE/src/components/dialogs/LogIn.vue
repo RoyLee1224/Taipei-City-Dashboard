@@ -4,6 +4,7 @@
 import { computed, ref } from "vue";
 import { useDialogStore } from "../../store/dialogStore";
 import { useAuthStore } from "../../store/authStore";
+import { useI18n } from "../../composables/useI18n";
 
 import DialogContainer from "./DialogContainer.vue";
 
@@ -17,6 +18,7 @@ const {
 
 const dialogStore = useDialogStore();
 const authStore = useAuthStore();
+const { t } = useI18n();
 
 const loginMode = ref("tp");
 const email = ref("");
@@ -65,8 +67,8 @@ function handleClose() {
           >
         </div>
         <div>
-          <h1>{{ VITE_APP_TITLE }}</h1>
-          <h2>Taipei City Dashboard</h2>
+          <h1>{{ VITE_APP_TITLE || t('login.appTitle') }}</h1>
+          <h2>{{ t('login.engTitle') }}</h2>
         </div>
       </div>
       <div
@@ -74,38 +76,38 @@ function handleClose() {
         class="login-form"
       >
         <button @click="handleTaipeiPassLogin">
-          <img src="../../assets/images/taipeipass.png">台北通登入
+          <img src="../../assets/images/taipeipass.png">{{ t('login.taipeiPassLogin') }}
         </button>
       </div>
       <div
         v-if="loginMode === 'email'"
         class="login-form"
       >
-        <label>電子郵件</label>
+        <label>{{ t('login.email') }}</label>
         <input
           v-model="email"
           required
           type="email"
         >
-        <label>密碼</label>
+        <label>{{ t('login.password') }}</label>
         <input
           v-model="password"
           required
           type="password"
         >
         <button @click="handleEmailLogin">
-          登入
+          {{ t('login.loginButton') }}
         </button>
       </div>
-      <p>點擊「台北通登入」即表示您已閱讀並同意</p>
+      <p>{{ t('login.agreementText') }}</p>
       <p>
         <a
           href="https://tuic.gov.taipei/zh/works/dashboard"
           target="_blank"
-        >臺北城市儀表板</a>的<a
+        >{{ t('login.appTitle') }}</a>{{ t('login.privacyPolicyText') }}<a
           href="https://tuic.gov.taipei/zh/privacy"
           target="_blank"
-        >隱私權政策</a>
+        >{{ t('login.privacyPolicy') }}</a>
       </p>
       <p
         :style="{
@@ -116,7 +118,7 @@ function handleClose() {
       >
         TUIC Igor Ann Iima Chu Jack 2023-2024
       </p>
-      <p>《讓臺北城市儀表板成為您的儀表板》</p>
+      <p>{{ t('login.slogan') }}</p>
     </div>
   </DialogContainer>
 </template>

@@ -47,16 +47,16 @@ watch(
 	{ immediate: true }
 );
 
-onMounted(() => {
+onMounted(async () => {
 	initializeCollapsedStates();
-	contentStore.initializeTranslation();
+	await contentStore.initializeTranslation();
 });
 
 // Watch for language changes and reinitialize translation
 watch(
 	() => i18nStore.currentLocale,
-	() => {
-		contentStore.initializeTranslation();
+	async () => {
+		await contentStore.initializeTranslation();
 	}
 );
 </script>

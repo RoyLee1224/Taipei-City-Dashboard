@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import http from '../router/axios';
 
 export const useI18nStore = defineStore('i18n', () => {
   const currentLocale = ref(localStorage.getItem('locale') || 'zh-TW');
@@ -124,6 +125,22 @@ export const useI18nStore = defineStore('i18n', () => {
         title: '專案貢獻者清單',
         clickToLearnMore: '點擊貢獻者頭貼以了解更多',
         contributor: '貢獻者'
+      },
+      login: {
+        appTitle: '臺北城市儀表板',
+        engTitle: 'Taipei City Dashboard',
+        taipeiPassLogin: '台北通登入',
+        email: '電子郵件',
+        password: '密碼',
+        loginButton: '登入',
+        agreementText: '點擊「台北通登入」即表示您已閱讀並同意',
+        privacyPolicyText: '的',
+        privacyPolicy: '隱私權政策',
+        slogan: '《讓臺北城市儀表板成為您的儀表板》'
+      },
+      // 動態載入的組件翻譯
+      data: {
+        components: {}
       }
     },
     'en-US': {
@@ -238,14 +255,204 @@ export const useI18nStore = defineStore('i18n', () => {
         title: 'Project Contributors List',
         clickToLearnMore: 'Click contributor avatar to learn more',
         contributor: 'Contributor'
+      },
+      login: {
+        appTitle: 'Taipei City Dashboard',
+        engTitle: 'Taipei City Dashboard',
+        taipeiPassLogin: 'TaipeiPass Login',
+        email: 'Email',
+        password: 'Password',
+        loginButton: 'Login',
+        agreementText: 'By clicking "Taipei Pass Login", you agree to have read and agree to',
+        privacyPolicyText: 'the',
+        privacyPolicy: 'Privacy Policy',
+        slogan: '《Let Taipei City Dashboard be Your Dashboard》'
+      },
+      // 動態載入的組件翻譯
+      data: {
+        components: {}
       }
     }
   });
 
+  // 載入翻譯資料的狀態
+  const isLoadingTranslations = ref(false);
+  const translationsLoaded = ref(false);
+
+  // 從 API 載入組件翻譯（帶重試機制）
+  const loadComponentTranslations = async (languageCode = currentLocale.value, retryCount = 0) => {
+    if (languageCode === 'zh-TW') {
+      // 中文不需要從 API 載入，但要確保狀態正確
+      translationsLoaded.value = false;
+      return;
+    }
+    
+    // 移除 translationsLoaded.value 的檢查，允許重新載入
+    isLoadingTranslations.value = true;
+    try {
+      console.log('Loading translations for:', languageCode, retryCount > 0 ? `(retry ${retryCount})` : '');
+      console.log('API call URL:', `/translation/components?language_code=${languageCode}`);
+      
+      const response = await http.get(`/translation/components?language_code=${languageCode}`);
+
+      console.log('Translation API response:', response);
+
+      if (response.data.status === 'success') {
+        const apiTranslations = response.data.data;
+        const componentTranslations = {};
+        
+        Object.entries(apiTranslations).forEach(([componentId, translation]) => {
+          componentTranslations[componentId] = translation;
+        });
+
+        // 更新翻譯資料
+        if (!messages.value[languageCode]) {
+          messages.value[languageCode] = { data: { components: {}, dashboards: {} } };
+        }
+        if (!messages.value[languageCode].data) {
+          messages.value[languageCode].data = { components: {}, dashboards: {} };
+        }
+        
+        messages.value[languageCode].data.components = componentTranslations;
+        translationsLoaded.value = true;
+        
+        console.log('Component translations loaded:', componentTranslations);
+      } else {
+        throw new Error(`API returned status: ${response.data.status}`);
+      }
+    } catch (error) {
+      console.error('Failed to load component translations:', error);
+      
+      // 重試機制：最多重試 2 次
+      if (retryCount < 2) {
+        console.log(`Retrying component translations load (attempt ${retryCount + 1})`);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // 等待 1 秒後重試
+        return loadComponentTranslations(languageCode, retryCount + 1);
+      } else {
+        console.error('Failed to load component translations after 3 attempts');
+      }
+    } finally {
+      isLoadingTranslations.value = false;
+    }
+  };
+
+  // 從 API 載入儀表板翻譯（帶重試機制）
+  const loadDashboardTranslations = async (languageCode = currentLocale.value, retryCount = 0) => {
+    if (languageCode === 'zh-TW') {
+      return;
+    }
+    
+    isLoadingTranslations.value = true;
+    try {
+      console.log('Loading dashboard translations for:', languageCode, retryCount > 0 ? `(retry ${retryCount})` : '');
+      console.log('API call URL:', `/translation/dashboards?language_code=${languageCode}`);
+      
+      const response = await http.get(`/translation/dashboards?language_code=${languageCode}`);
+
+      console.log('Dashboard Translation API response:', response);
+
+      if (response.data.status === 'success') {
+        const apiTranslations = response.data.data;
+        const dashboardTranslations = {};
+        
+        Object.entries(apiTranslations).forEach(([dashboardId, translation]) => {
+          dashboardTranslations[dashboardId] = translation;
+        });
+
+        // 更新翻譯資料
+        if (!messages.value[languageCode]) {
+          messages.value[languageCode] = { data: { components: {}, dashboards: {} } };
+        }
+        if (!messages.value[languageCode].data) {
+          messages.value[languageCode].data = { components: {}, dashboards: {} };
+        }
+        
+        messages.value[languageCode].data.dashboards = dashboardTranslations;
+        
+        console.log('Dashboard translations loaded:', dashboardTranslations);
+      } else {
+        throw new Error(`API returned status: ${response.data.status}`);
+      }
+    } catch (error) {
+      console.error('Failed to load dashboard translations:', error);
+      
+      // 重試機制：最多重試 2 次
+      if (retryCount < 2) {
+        console.log(`Retrying dashboard translations load (attempt ${retryCount + 1})`);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // 等待 1 秒後重試
+        return loadDashboardTranslations(languageCode, retryCount + 1);
+      } else {
+        console.error('Failed to load dashboard translations after 3 attempts');
+      }
+    } finally {
+      isLoadingTranslations.value = false;
+    }
+  };
+
+  // 載入所有翻譯
+  const loadAllTranslations = async (languageCode = currentLocale.value) => {
+    if (languageCode === 'zh-TW') {
+      translationsLoaded.value = false;
+      return;
+    }
+    
+    await Promise.all([
+      loadComponentTranslations(languageCode),
+      loadDashboardTranslations(languageCode)
+    ]);
+  };
+
   // 切換語言
-  const setLocale = (locale) => {
-    currentLocale.value = locale;
-    localStorage.setItem('locale', locale);
+  const setLocale = async (locale) => {
+    console.log(`Starting language switch to: ${locale}`);
+    
+    // 設置載入狀態
+    isLoadingTranslations.value = true;
+    
+    try {
+      currentLocale.value = locale;
+      localStorage.setItem('locale', locale);
+      
+      // 重要修正：切換語言時重置翻譯狀態
+      if (locale === 'zh-TW') {
+        // 切換回中文時，清除所有動態翻譯並重置狀態
+        translationsLoaded.value = false;
+        // 清空英文組件翻譯
+        if (messages.value['en-US']?.data?.components) {
+          messages.value['en-US'].data.components = {};
+        }
+        if (messages.value['en-US']?.data?.dashboards) {
+          messages.value['en-US'].data.dashboards = {};
+        }
+        console.log('Switched to Chinese, cleared translations');
+      } else {
+        // 切換到其他語言時也重置狀態，確保重新載入
+        translationsLoaded.value = false;
+        console.log('Loading translations for non-Chinese language');
+        await loadAllTranslations(locale);
+        console.log('All translations loaded successfully');
+      }
+      
+      // 觸發內容重新載入
+      await triggerContentRefresh();
+      
+    } catch (error) {
+      console.error('Error during language switch:', error);
+    } finally {
+      isLoadingTranslations.value = false;
+      console.log(`Language switch to ${locale} completed`);
+    }
+  };
+
+  // 觸發內容重新載入
+  const triggerContentRefresh = async () => {
+    // 這個函數會被 contentStore 或其他組件使用
+    // 發送一個事件通知所有組件重新載入翻譯
+    if (typeof window !== 'undefined' && window.dispatchEvent) {
+      window.dispatchEvent(new CustomEvent('languageChanged', {
+        detail: { locale: currentLocale.value }
+      }));
+    }
   };
 
   // 翻譯函數
@@ -276,11 +483,26 @@ export const useI18nStore = defineStore('i18n', () => {
     return value || fallback;
   };
 
+  // 根據組件 ID 獲取翻譯
+  const getComponentTranslationById = (componentId) => {
+    if (currentLocale.value === 'zh-TW') {
+      return null; // 中文不需要翻譯
+    }
+    
+    return messages.value[currentLocale.value]?.data?.components?.[componentId] || null;
+  };
+
   return {
     currentLocale,
     availableLocales,
     messages,
+    isLoadingTranslations,
+    translationsLoaded,
     setLocale,
-    t
+    t,
+    loadComponentTranslations,
+    getComponentTranslationById,
+    loadAllTranslations,
+    triggerContentRefresh
   };
 }); 

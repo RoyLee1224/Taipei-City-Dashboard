@@ -22,20 +22,45 @@ export function useDataTranslation() {
     return text;
   };
 
-  // 翻譯儀表板組件資料
-  const translateComponentData = (component) => {
-    if (!component) return component;
+  // 翻譯組件資料（使用組件 ID）
+  const translateComponentById = (component) => {
+    if (!component || i18nStore.currentLocale === 'zh-TW') {
+      return component;
+    }
 
     const translatedComponent = { ...component };
     
-    // 翻譯組件名稱
-    if (translatedComponent.name) {
-      translatedComponent.name = translateText(translatedComponent.name, 'components');
+    // 使用組件 ID 從資料庫翻譯中查找
+    if (translatedComponent.id) {
+      const translation = i18nStore.getComponentTranslationById(translatedComponent.id);
+      if (translation) {
+        translatedComponent.name = translation;
+      }
     }
+
+    return translatedComponent;
+  };
+
+  // 翻譯儀表板組件資料（兼容舊的實作）
+  const translateComponentData = (component) => {
+    if (!component) return component;
+
+    // 先嘗試使用 ID 翻譯
+    let translatedComponent = translateComponentById(component);
     
-    // 翻譯組件標題
-    if (translatedComponent.title) {
-      translatedComponent.title = translateText(translatedComponent.title, 'components');
+    // 如果 ID 翻譯沒有結果，回退到原來的方式
+    if (translatedComponent.name === component.name && i18nStore.currentLocale !== 'zh-TW') {
+      translatedComponent = { ...component };
+      
+      // 翻譯組件名稱
+      if (translatedComponent.name) {
+        translatedComponent.name = translateText(translatedComponent.name, 'components');
+      }
+      
+      // 翻譯組件標題
+      if (translatedComponent.title) {
+        translatedComponent.title = translateText(translatedComponent.title, 'components');
+      }
     }
 
     return translatedComponent;
@@ -47,7 +72,25 @@ export function useDataTranslation() {
 
     const translatedDashboard = { ...dashboard };
     
-    // 翻譯儀表板名稱
+    // 如果當前語言是中文，直接返回
+    if (i18nStore.currentLocale === 'zh-TW') {
+      return translatedDashboard;
+    }
+    
+    // 先嘗試使用 ID 翻譯（如果有 id 屬性）
+    if (translatedDashboard.id) {
+      const dashboardTranslations = i18nStore.messages[i18nStore.currentLocale]?.data?.dashboards;
+      if (dashboardTranslations && dashboardTranslations[translatedDashboard.id]) {
+        translatedDashboard.name = dashboardTranslations[translatedDashboard.id];
+        // 如果有組件陣列，也要翻譯組件
+        if (translatedDashboard.components && Array.isArray(translatedDashboard.components)) {
+          translatedDashboard.components = translatedDashboard.components.map(translateComponentData);
+        }
+        return translatedDashboard;
+      }
+    }
+    
+    // 如果 ID 翻譯沒有結果，回退到原來的方式（使用文字）
     if (translatedDashboard.name) {
       translatedDashboard.name = translateText(translatedDashboard.name, 'dashboards');
     }
@@ -104,17 +147,24 @@ export function useDataTranslation() {
     return translatedObj;
   };
 
-  // 動態添加翻譯
-  const addTranslation = (type, chineseText, englishText) => {
+  // 動態添加翻譯（更新為支援 ID 映射）
+  const addTranslation = (type, chineseText, englishText, componentId = null) => {
     if (!chineseText || !englishText) return;
     
     // 添加到英文翻譯對照表
     if (!i18nStore.messages['en-US'].data[type]) {
       i18nStore.messages['en-US'].data[type] = {};
     }
-    i18nStore.messages['en-US'].data[type][chineseText] = englishText;
     
-    console.log(`Added translation: ${chineseText} -> ${englishText}`);
+    if (type === 'components' && componentId) {
+      // 如果是組件翻譯且有 ID，優先使用 ID 作為 key
+      i18nStore.messages['en-US'].data[type][componentId] = englishText;
+    } else {
+      // 其他情況使用文字作為 key
+      i18nStore.messages['en-US'].data[type][chineseText] = englishText;
+    }
+    
+    console.log(`Added translation: ${chineseText} -> ${englishText}${componentId ? ` (ID: ${componentId})` : ''}`);
   };
 
   // 獲取所有現有的翻譯
@@ -122,8 +172,17 @@ export function useDataTranslation() {
     return i18nStore.messages['en-US']?.data?.[type] || {};
   };
 
+  // 確保翻譯資料已載入
+  const ensureTranslationsLoaded = async () => {
+    if (i18nStore.currentLocale !== 'zh-TW') {
+      await i18nStore.loadAllTranslations();
+    }
+    return i18nStore;
+  };
+
   return {
     translateComponentData,
+    translateComponentById,
     translateDashboard,
     translateDashboards,
     translateText,
@@ -131,6 +190,7 @@ export function useDataTranslation() {
     translateArray,
     translateObject,
     addTranslation,
-    getAllTranslations
+    getAllTranslations,
+    ensureTranslationsLoaded
   };
 } 
