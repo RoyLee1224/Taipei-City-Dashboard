@@ -1,618 +1,345 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
-import http from '../router/axios';
+import { defineStore } from "pinia";
+import { ref } from "vue";
+import http from "../router/axios";
 
-export const useI18nStore = defineStore('i18n', () => {
-  const currentLocale = ref(localStorage.getItem('locale') || 'zh-TW');
-  
-  // 語言列表
-  const availableLocales = ref([
-    { code: 'zh-TW', name: '繁體中文' },
-    { code: 'en-US', name: 'English' },
-  ]);
+export const useI18nStore = defineStore("i18n", () => {
+	const currentLocale = ref(localStorage.getItem("locale") || "zh-TW");
 
-  // 翻譯資源
-  const messages = ref({
-    'zh-TW': {
-      common: {
-        dashboard: '儀表板',
-        map: '地圖',
-        component: '組件',
-        settings: '用戶設定',
-        login: '登入',
-        logout: '登出',
-        save: '儲存',
-        cancel: '取消',
-        confirm: '確認',
-        delete: '刪除',
-        edit: '編輯',
-        add: '新增',
-        search: '搜尋',
-        loading: '載入中...',
-        noData: '無資料',
-        error: '錯誤',
-        documentation: '技術文件',
-        contributors: '專案貢獻者',
-        backToDashboard: '返回儀表板'
-      },
-      navigation: {
-        dashboard: '儀表板總覽',
-        map: '地圖交叉比對',
-        components: '組件瀏覽平台',
-        admin: '管理員後臺'
-      },
-      sidebar: {
-        personalDashboard: '私人儀表板',
-        personal: '私人',
-        myFavorites: '我的最愛',
-        favorites: '最愛',
-        favoriteComponents: '收藏組件',
-        myDashboards: '個人儀表板',
-        my: '個人',
-        noPersonalDashboards: '尚無個人儀表板',
-        none: '尚無',
-        publicDashboards: '公共儀表板',
-        public: '公共',
-        myNewDashboard: '我的新儀表板',
-        privateDashboard: '私人儀表板',
-        personalDashboards: '個人儀表板',
-        noPersonalDashboard: '尚無個人儀表板',
-        publicDashboard: '公共儀表板'
-      },
-      componentSidebar: {
-        addComponentToDashboard: '新增組件至儀表板',
-        selectDashboard: '選擇儀表板',
-        newDashboard: '新增儀表板',
-        name: '名稱',
-        enterName: '輸入名稱',
-        icon: '圖示',
-        searchIcon: '尋找圖示 (英文)',
-        dashboardComponents: '儀表板組件 (點擊右側組件 [+] 圖示以新增)',
-        addToDashboard: '新增組件至儀表板',
-        updateDashboard: '更新儀表板'
-      },
-      adminSidebar: {
-        dashboardSettings: '儀表板設定',
-        dashboard: '表板',
-        componentSettings: '組件設定',
-        components: '組件',
-        editPublicComponents: '編輯公開組件',
-        issueReports: '問題回報',
-        issues: '問題',
-        pendingIssues: '待回覆問題',
-        citizenDisasterReports: '民眾災害通報',
-        systemOverview: '系統總覽',
-        system: '系統',
-        userInfo: '使用者資訊',
-        contributorInfo: '貢獻者資訊'
-      },
-      settingsBar: {
-        settings: '設定',
-        addLandmark: '新增地標',
-        clickToCreateLandmark: '雙擊以建立地標'
-      },
-      cities: {
-        taipei: '臺北',
-        metrotaipei: '雙北',
-        newtaipei: '新北',
-        taoyuan: '桃園',
-        taipeiCity: '臺北市',
-        newtaipeiCity: '新北市',
-        taoyuanCity: '桃園市',
-        taipeiDashboard: '臺北儀表板',
-        metrotaipeiDashboard: '雙北儀表板示範',
-        newtaipeiDashboard: '新北儀表板',
-        taoyuanDashboard: '桃園儀表板'
-      },
-      initialWarning: {
-        mobileTitle: '臺北城市儀表板行動版注意事項',
-        desktopTitle: '臺北城市儀表板使用說明',
-        mobileMessage1: '臺北城市儀表板主要為給平板與電腦使用的平台，手機版僅為概覽使用，因此許多功能在行動版無法使用。',
-        mobileMessage2: '手機版不支援的功能包含：登入、地圖檢視、組件瀏覽平台、回報問題等。',
-        mobileMessage3: '如希望完整體驗本產品，建議改成使用平板或電腦檢視。',
-        desktopMessage1: '歡迎使用臺北城市儀表板，本產品的目的為 1. 分享府內重要決策工具與成果 2. 促進府內與民間開發者的交流互動 3. 推廣臺北開放資料應用。',
-        desktopMessage2: '本產品所呈現的資料集均以臺北開放資料為基礎，經由臺北大數據中心清理建構，並在本平台展示供民眾使用下載。',
-        desktopMessage3: '如果希望新增並儲存自己的儀表板，請點擊右上方的「登入」按鈕，並使用台北通APP註冊/登入本平台。',
-        dontShowAgain: '下次不再顯示此視窗',
-        confirm: '確定了解'
-      },
-      downloadData: {
-        title: '下載資料',
-        enterFileName: '請輸入檔名',
-        selectFileFormat: '請選擇檔案格式',
-        cancel: '取消',
-        downloadJSON: '下載JSON',
-        downloadCSV: '下載CSV'
-      },
-      contributorsList: {
-        title: '專案貢獻者清單',
-        clickToLearnMore: '點擊貢獻者頭貼以了解更多',
-        contributor: '貢獻者'
-      },
-      login: {
-        appTitle: '臺北城市儀表板',
-        engTitle: 'Taipei City Dashboard',
-        taipeiPassLogin: '台北通登入',
-        email: '電子郵件',
-        password: '密碼',
-        loginButton: '登入',
-        agreementText: '點擊「台北通登入」即表示您已閱讀並同意',
-        privacyPolicyText: '的',
-        privacyPolicy: '隱私權政策',
-        slogan: '《讓臺北城市儀表板成為您的儀表板》'
-      },
-      mobileLayer: {
-        basicLayers: '基本圖層'
-      },
-      mapView: {
-        basicLayers: '基本圖層',
-        noSpatialData: '無空間資料組件',
-        noSpatialDataNotification: '本組件沒有空間資料，不會渲染地圖',
-        errorLoading: '發生錯誤，無法載入儀表板',
-        noComponents: '尚未加入組件',
-        addFirstComponent: '加入您的第一個組件',
-        addToFavorites: '點擊其他儀表板組件之愛心以新增至收藏組件'
-      },
-      dashboardComponent: {
-        componentInfo: '組件資訊',
-        componentInfoAndFeatures: '組件資訊與功能',
-        fixedData: '固定資料',
-        realTimeData: '即時資料',
-        demoData: '示範靜態資料',
-        maintenance: '維護修復中',
-        updatePrefix: '每',
-        updateSuffix: '更新',
-        irregularUpdate: '不定期更新',
-        dataError: '組件資料異常',
-        filterMap: '篩選地圖',
-        spatialData: '空間資料',
-        spatialDataAvailable: '具備空間資料',
-        historyData: '歷史資料',
-        historyDataAvailable: '具備歷史資料',
-        chartTypes: {
-          DonutChart: '圓餅圖',
-          BarChart: '橫向長條圖',
-          ColumnChart: '縱向長條圖',
-          BarPercentChart: '長條圖(%)',
-          TreemapChart: '矩形圖',
-          DistrictChart: '行政區圖',
-          MetroChart: '捷運行駛圖',
-          TimelineSeparateChart: '折線圖(比較)',
-          TimelineStackedChart: '折線圖(堆疊)',
-          GuageChart: '量表圖',
-          RadarChart: '雷達圖',
-          HeatmapChart: '熱力圖',
-          PolarAreaChart: '極座標圖',
-          ColumnLineChart: '長條折線圖',
-          BarChartWithGoal: '長條圖(目標)',
-          IconPercentChart: '圖示比例圖',
-          SpeedometerChart: '儀表板圖',
-          IndicatorChart: '指標圖',
-          MapLegend: '地圖圖例',
-          TextUnitChart: '文字數值圖'
-        }
-      },
-      // 動態載入的組件翻譯
-      data: {
-        components: {},
-        dashboards: {}
-      }
-    },
-    'en-US': {
-      common: {
-        dashboard: 'Dashboard',
-        map: 'Map',
-        component: 'Component',
-        settings: 'User Settings',
-        login: 'Login',
-        logout: 'Logout',
-        save: 'Save',
-        cancel: 'Cancel',
-        confirm: 'Confirm',
-        delete: 'Delete',
-        edit: 'Edit',
-        add: 'Add',
-        search: 'Search',
-        loading: 'Loading...',
-        noData: 'No Data',
-        error: 'Error',
-        documentation: 'Technical Documentation',
-        contributors: 'Project Contributors',
-        backToDashboard: 'Back to Dashboard'
-      },
-      navigation: {
-        dashboard: 'Dashboard Overview',
-        map: 'Map Cross Comparison',
-        components: 'Component Library',
-        admin: 'Admin Panel'
-      },
-      sidebar: {
-        personalDashboard: 'Personal Dashboards',
-        personal: 'Personal',
-        myFavorites: 'My Favorites',
-        favorites: 'Favorites',
-        favoriteComponents: 'Components',
-        myDashboards: 'My Dashboards',
-        my: 'My',
-        noPersonalDashboards: 'No Personal Dashboards',
-        none: 'None',
-        publicDashboards: 'Public Dashboards',
-        public: 'Public',
-        myNewDashboard: 'My New Dashboard',
-        privateDashboard: 'Personal Dashboard',
-        personalDashboards: 'Personal Dashboards',
-        noPersonalDashboard: 'No Personal Dashboard',
-        publicDashboard: 'Public Dashboard'
-      },
-      componentSidebar: {
-        addComponentToDashboard: 'Add Component to Dashboard',
-        selectDashboard: 'Select Dashboard',
-        newDashboard: 'New Dashboard',
-        name: 'Name',
-        enterName: 'Enter name',
-        icon: 'Icon',
-        searchIcon: 'Search icon (English)',
-        dashboardComponents: 'Dashboard Components (Click [+] icon on right-side components to add)',
-        addToDashboard: 'Add to Dashboard',
-        updateDashboard: 'Update Dashboard'
-      },
-      adminSidebar: {
-        dashboardSettings: 'Dashboard Settings',
-        dashboard: 'Dashboard',
-        componentSettings: 'Component Settings',
-        components: 'Components',
-        editPublicComponents: 'Edit Public Components',
-        issueReports: 'Issue Reports',
-        issues: 'Issues',
-        pendingIssues: 'Pending Issues',
-        citizenDisasterReports: 'Citizen Disaster Reports',
-        systemOverview: 'System Overview',
-        system: 'System',
-        userInfo: 'User Info',
-        contributorInfo: 'Contributor Info'
-      },
-      settingsBar: {
-        settings: 'Settings',
-        addLandmark: 'Add Landmark',
-        clickToCreateLandmark: 'Double-click to create landmark'
-      },
-      cities: {
-        taipei: 'Taipei',
-        metrotaipei: 'Metro Taipei',
-        newtaipei: 'New Taipei',
-        taoyuan: 'Taoyuan',
-        taipeiCity: 'Taipei City',
-        newtaipeiCity: 'New Taipei City',
-        taoyuanCity: 'Taoyuan City',
-        taipeiDashboard: 'Taipei',
-        metrotaipeiDashboard: 'Metro Taipei',
-        newtaipeiDashboard: 'New Taipei',
-        taoyuanDashboard: 'Taoyuan'
-      },
-      initialWarning: {
-        mobileTitle: 'Taipei City Dashboard Mobile Version Notice',
-        desktopTitle: 'Taipei City Dashboard Usage Instructions',
-        mobileMessage1: 'The Taipei City Dashboard is primarily designed for tablets and computers, with the mobile version serving as a summary view only. Many features are unavailable in the mobile version.',
-        mobileMessage2: 'The mobile version does not support features such as logging in, viewing maps, accessing the component library, or reporting issues.',
-        mobileMessage3: 'If you wish to fully experience this product, we recommend using a tablet or computer instead.',
-        desktopMessage1: 'Welcome to the Taipei City Dashboard, the purpose of this product is 1. Sharing government decision-making tools and results 2. Promoting communication and interaction between the government and the public 3. Promoting the application of Taipei open data.',
-        desktopMessage2: 'The data sets displayed in this product are based on Taipei open data, cleaned and constructed by the Taipei Big Data Center, and are available for public use and download on this platform.',
-        desktopMessage3: 'If you wish to add and save your own dashboard, please click the "Login" button in the upper right corner and register/log in using the Taipei Pass APP.',
-        dontShowAgain: 'Do not show this window again',
-        confirm: 'Confirm understanding'
-      },
-      downloadData: {
-        title: 'Download Data',
-        enterFileName: 'Enter File Name',
-        selectFileFormat: 'Select File Format',
-        cancel: 'Cancel',
-        downloadJSON: 'Download JSON',
-        downloadCSV: 'Download CSV'
-      },
-      contributorsList: {
-        title: 'Project Contributors List',
-        clickToLearnMore: 'Click contributor avatar to learn more',
-        contributor: 'Contributor'
-      },
-      login: {
-        appTitle: 'Taipei City Dashboard',
-        engTitle: 'Taipei City Dashboard',
-        taipeiPassLogin: 'TaipeiPass Login',
-        email: 'Email',
-        password: 'Password',
-        loginButton: 'Login',
-        agreementText: 'By clicking "Taipei Pass Login", you agree to have read and agree to',
-        privacyPolicyText: 'the',
-        privacyPolicy: 'Privacy Policy',
-        slogan: '《Let Taipei City Dashboard be Your Dashboard》'
-      },
-      mobileLayer: {
-        basicLayers: 'Basic Layers'
-      },
-      mapView: {
-        basicLayers: 'Basic Layers',
-        noSpatialData: 'No Spatial Data Component',
-        noSpatialDataNotification: 'This component has no spatial data and will not render the map',
-        errorLoading: 'Error occurred, unable to load dashboard',
-        noComponents: 'No components added',
-        addFirstComponent: 'Add your first component',
-        addToFavorites: 'Click the heart on other dashboard components to add to favorites'
-      },
-      dashboardComponent: {
-        componentInfo: 'Component Info',
-        componentInfoAndFeatures: 'Component Info and Features',
-        fixedData: 'Fixed Data',
-        realTimeData: 'Real-Time Data',
-        demoData: 'Demo Static Data',
-        maintenance: 'Maintenance',
-        updatePrefix: 'Updates every ',
-        updateSuffix: '',
-        irregularUpdate: 'Irregular Updates',
-        dataError: 'Component Data Error',
-        filterMap: 'Filter Map',
-        spatialData: 'Spatial Data',
-        spatialDataAvailable: 'Spatial Data Available',
-        historyData: 'History Data',
-        historyDataAvailable: 'History Data Available',
-        chartTypes: {
-          DonutChart: 'Donut',
-          BarChart: 'Bar',
-          ColumnChart: 'Column',
-          BarPercentChart: 'Bar Percent',
-          TreemapChart: 'Treemap',
-          DistrictChart: 'District',
-          MetroChart: 'Metro',
-          TimelineSeparateChart: 'Timeline Separate',
-          TimelineStackedChart: 'Timeline Stacked',
-          GuageChart: 'Guage',
-          RadarChart: 'Radar',
-          HeatmapChart: 'Heatmap',
-          PolarAreaChart: 'Polar Area',
-          ColumnLineChart: 'Column Line',
-          BarChartWithGoal: 'Bar with Goal',
-          IconPercentChart: 'Icon Percent',
-          SpeedometerChart: 'Speedometer',
-          IndicatorChart: 'Indicator',
-          MapLegend: 'Map Legend',
-          TextUnitChart: 'Text Unit'
-        }
-      },
-      // 動態載入的組件翻譯
-      data: {
-        components: {},
-        dashboards: {}
-      }
-    }
-  });
+	// 語言列表
+	const availableLocales = ref([
+		{ code: "zh-TW", name: "繁體中文" },
+		{ code: "en-US", name: "English" },
+	]);
 
-  // 載入翻譯資料的狀態
-  const isLoadingTranslations = ref(false);
-  const translationsLoaded = ref(false);
+	// 翻譯資源 - 動態載入
+	const messages = ref({
+		"zh-TW": {
+			// 動態載入的組件翻譯
+			data: {
+				components: {},
+				dashboards: {},
+			},
+		},
+		"en-US": {
+			// 動態載入的組件翻譯
+			data: {
+				components: {},
+				dashboards: {},
+			},
+		},
+	});
 
-  // 從 API 載入組件翻譯（帶重試機制）
-  const loadComponentTranslations = async (languageCode = currentLocale.value, retryCount = 0) => {
-    if (languageCode === 'zh-TW') {
-      // 中文不需要從 API 載入，但要確保狀態正確
-      translationsLoaded.value = false;
-      return;
-    }
-    
-    // 移除 translationsLoaded.value 的檢查，允許重新載入
-    isLoadingTranslations.value = true;
-    try {
-      console.log('Loading translations for:', languageCode, retryCount > 0 ? `(retry ${retryCount})` : '');
-      console.log('API call URL:', `/translation/components?language_code=${languageCode}`);
-      
-      const response = await http.get(`/translation/components?language_code=${languageCode}`);
+	const isLoadingTranslations = ref(false);
+	const translationsLoaded = ref(false);
 
-      console.log('Translation API response:', response);
+	// 【新增】載入靜態翻譯文件（從 JSON 文件）
+	const loadStaticTranslations = async (
+		languageCode = currentLocale.value
+	) => {
+		try {
+			console.log(`Loading static translations for ${languageCode}...`);
 
-      if (response.data.status === 'success') {
-        const apiTranslations = response.data.data;
-        const componentTranslations = {};
-        
-        Object.entries(apiTranslations).forEach(([componentId, translation]) => {
-          componentTranslations[componentId] = translation;
-        });
+			// 動態導入靜態翻譯文件
+			const translationModule = await import(
+				`../locales/${languageCode}.json`
+			);
+			const staticTranslations = translationModule.default;
 
-        // 更新翻譯資料
-        if (!messages.value[languageCode]) {
-          messages.value[languageCode] = { data: { components: {}, dashboards: {} } };
-        }
-        if (!messages.value[languageCode].data) {
-          messages.value[languageCode].data = { components: {}, dashboards: {} };
-        }
-        
-        messages.value[languageCode].data.components = componentTranslations;
-        translationsLoaded.value = true;
-        
-        console.log('Component translations loaded:', componentTranslations);
-      } else {
-        throw new Error(`API returned status: ${response.data.status}`);
-      }
-    } catch (error) {
-      console.error('Failed to load component translations:', error);
-      
-      // 重試機制：最多重試 2 次
-      if (retryCount < 2) {
-        console.log(`Retrying component translations load (attempt ${retryCount + 1})`);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // 等待 1 秒後重試
-        return loadComponentTranslations(languageCode, retryCount + 1);
-      } else {
-        console.error('Failed to load component translations after 3 attempts');
-      }
-    } finally {
-      isLoadingTranslations.value = false;
-    }
-  };
+			// 確保翻譯物件結構存在
+			if (!messages.value[languageCode]) {
+				messages.value[languageCode] = {
+					data: { components: {}, dashboards: {} },
+				};
+			}
 
-  // 從 API 載入儀表板翻譯（帶重試機制）
-  const loadDashboardTranslations = async (languageCode = currentLocale.value, retryCount = 0) => {
-    if (languageCode === 'zh-TW') {
-      return;
-    }
-    
-    isLoadingTranslations.value = true;
-    try {
-      console.log('Loading dashboard translations for:', languageCode, retryCount > 0 ? `(retry ${retryCount})` : '');
-      console.log('API call URL:', `/translation/dashboards?language_code=${languageCode}`);
-      
-      const response = await http.get(`/translation/dashboards?language_code=${languageCode}`);
+			// 合併靜態翻譯到現有結構中（保留 data 部分）
+			const existingData = messages.value[languageCode].data;
+			messages.value[languageCode] = {
+				...staticTranslations,
+				data: existingData,
+			};
 
-      console.log('Dashboard Translation API response:', response);
+			console.log(`Static translations loaded for ${languageCode}`);
+			return true;
+		} catch (error) {
+			console.error(
+				`Failed to load static translations for ${languageCode}:`,
+				error
+			);
+			return false;
+		}
+	};
 
-      if (response.data.status === 'success') {
-        const apiTranslations = response.data.data;
-        const dashboardTranslations = {};
-        
-        Object.entries(apiTranslations).forEach(([dashboardId, translation]) => {
-          dashboardTranslations[dashboardId] = translation;
-        });
+	// 從 API 載入組件翻譯（帶重試機制）
+	const loadComponentTranslations = async (
+		languageCode = currentLocale.value,
+		retryCount = 0
+	) => {
+		if (languageCode === "zh-TW") {
+			// 中文不需要從 API 載入，但要確保狀態正確
+			translationsLoaded.value = false;
+			return;
+		}
 
-        // 更新翻譯資料
-        if (!messages.value[languageCode]) {
-          messages.value[languageCode] = { data: { components: {}, dashboards: {} } };
-        }
-        if (!messages.value[languageCode].data) {
-          messages.value[languageCode].data = { components: {}, dashboards: {} };
-        }
-        
-        messages.value[languageCode].data.dashboards = dashboardTranslations;
-        
-        console.log('Dashboard translations loaded:', dashboardTranslations);
-      } else {
-        throw new Error(`API returned status: ${response.data.status}`);
-      }
-    } catch (error) {
-      console.error('Failed to load dashboard translations:', error);
-      
-      // 重試機制：最多重試 2 次
-      if (retryCount < 2) {
-        console.log(`Retrying dashboard translations load (attempt ${retryCount + 1})`);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // 等待 1 秒後重試
-        return loadDashboardTranslations(languageCode, retryCount + 1);
-      } else {
-        console.error('Failed to load dashboard translations after 3 attempts');
-      }
-    } finally {
-      isLoadingTranslations.value = false;
-    }
-  };
+		isLoadingTranslations.value = true;
+		try {
+			console.log(
+				"Loading component translations for:",
+				languageCode,
+				retryCount > 0 ? `(retry ${retryCount})` : ""
+			);
 
-  // 載入所有翻譯
-  const loadAllTranslations = async (languageCode = currentLocale.value) => {
-    if (languageCode === 'zh-TW') {
-      translationsLoaded.value = false;
-      return;
-    }
-    
-    await Promise.all([
-      loadComponentTranslations(languageCode),
-      loadDashboardTranslations(languageCode)
-    ]);
-  };
+			const response = await http.get(
+				`/translation/components?language_code=${languageCode}`
+			);
 
-  // 切換語言
-  const setLocale = async (locale) => {
-    console.log(`Starting language switch to: ${locale}`);
-    
-    // 設置載入狀態
-    isLoadingTranslations.value = true;
-    
-    try {
-      currentLocale.value = locale;
-      localStorage.setItem('locale', locale);
-      
-      // 重要修正：切換語言時重置翻譯狀態
-      if (locale === 'zh-TW') {
-        // 切換回中文時，清除所有動態翻譯並重置狀態
-        translationsLoaded.value = false;
-        // 清空英文組件翻譯
-        if (messages.value['en-US']?.data?.components) {
-          messages.value['en-US'].data.components = {};
-        }
-        if (messages.value['en-US']?.data?.dashboards) {
-          messages.value['en-US'].data.dashboards = {};
-        }
-        console.log('Switched to Chinese, cleared translations');
-      } else {
-        // 切換到其他語言時也重置狀態，確保重新載入
-        translationsLoaded.value = false;
-        console.log('Loading translations for non-Chinese language');
-        await loadAllTranslations(locale);
-        console.log('All translations loaded successfully');
-      }
-      
-      // 觸發內容重新載入
-      await triggerContentRefresh();
-      
-    } catch (error) {
-      console.error('Error during language switch:', error);
-    } finally {
-      isLoadingTranslations.value = false;
-      console.log(`Language switch to ${locale} completed`);
-    }
-  };
+			if (response.data.status === "success") {
+				const apiTranslations = response.data.data;
+				const componentTranslations = {};
 
-  // 觸發內容重新載入
-  const triggerContentRefresh = async () => {
-    // 這個函數會被 contentStore 或其他組件使用
-    // 發送一個事件通知所有組件重新載入翻譯
-    if (typeof window !== 'undefined' && window.dispatchEvent) {
-      window.dispatchEvent(new CustomEvent('languageChanged', {
-        detail: { locale: currentLocale.value }
-      }));
-    }
-  };
+				Object.entries(apiTranslations).forEach(
+					([componentId, translation]) => {
+						componentTranslations[componentId] = translation;
+					}
+				);
 
-  // 翻譯函數
-  const t = (key, fallback = key) => {
-    const keys = key.split('.');
-    let value = messages.value[currentLocale.value];
-    
-    for (const k of keys) {
-      if (value && typeof value === 'object' && value[k] !== undefined) {
-        value = value[k];
-      } else {
-        // 如果找不到翻譯，嘗試使用繁體中文作為 fallback
-        if (currentLocale.value !== 'zh-TW') {
-          let fallbackValue = messages.value['zh-TW'];
-          for (const k of keys) {
-            if (fallbackValue && typeof fallbackValue === 'object' && fallbackValue[k] !== undefined) {
-              fallbackValue = fallbackValue[k];
-            } else {
-              return fallback;
-            }
-          }
-          return fallbackValue;
-        }
-        return fallback;
-      }
-    }
-    
-    return value || fallback;
-  };
+				// 更新翻譯資料
+				if (!messages.value[languageCode]) {
+					messages.value[languageCode] = {
+						data: { components: {}, dashboards: {} },
+					};
+				}
+				if (!messages.value[languageCode].data) {
+					messages.value[languageCode].data = {
+						components: {},
+						dashboards: {},
+					};
+				}
 
-  // 根據組件 ID 獲取翻譯
-  const getComponentTranslationById = (componentId) => {
-    if (currentLocale.value === 'zh-TW') {
-      return null; // 中文不需要翻譯
-    }
-    
-    return messages.value[currentLocale.value]?.data?.components?.[componentId] || null;
-  };
+				messages.value[languageCode].data.components =
+					componentTranslations;
+				translationsLoaded.value = true;
 
-  return {
-    currentLocale,
-    availableLocales,
-    messages,
-    isLoadingTranslations,
-    translationsLoaded,
-    setLocale,
-    t,
-    loadComponentTranslations,
-    getComponentTranslationById,
-    loadAllTranslations,
-    triggerContentRefresh
-  };
-}); 
+				console.log(
+					"Component translations loaded:",
+					componentTranslations
+				);
+			} else {
+				throw new Error(`API returned status: ${response.data.status}`);
+			}
+		} catch (error) {
+			console.error("Failed to load component translations:", error);
+
+			// 重試機制：最多重試 2 次
+			if (retryCount < 2) {
+				console.log(
+					`Retrying component translations load (attempt ${
+						retryCount + 1
+					})`
+				);
+				await new Promise((resolve) => setTimeout(resolve, 1000));
+				return loadComponentTranslations(languageCode, retryCount + 1);
+			} else {
+				console.error(
+					"Failed to load component translations after 3 attempts"
+				);
+			}
+		} finally {
+			isLoadingTranslations.value = false;
+		}
+	};
+
+	// 從 API 載入儀表板翻譯（帶重試機制）
+	const loadDashboardTranslations = async (
+		languageCode = currentLocale.value,
+		retryCount = 0
+	) => {
+		if (languageCode === "zh-TW") {
+			return;
+		}
+
+		isLoadingTranslations.value = true;
+		try {
+			console.log(
+				"Loading dashboard translations for:",
+				languageCode,
+				retryCount > 0 ? `(retry ${retryCount})` : ""
+			);
+
+			const response = await http.get(
+				`/translation/dashboards?language_code=${languageCode}`
+			);
+
+			if (response.data.status === "success") {
+				const apiTranslations = response.data.data;
+				const dashboardTranslations = {};
+
+				Object.entries(apiTranslations).forEach(
+					([dashboardId, translation]) => {
+						dashboardTranslations[dashboardId] = translation;
+					}
+				);
+
+				// 更新翻譯資料
+				if (!messages.value[languageCode]) {
+					messages.value[languageCode] = {
+						data: { components: {}, dashboards: {} },
+					};
+				}
+				if (!messages.value[languageCode].data) {
+					messages.value[languageCode].data = {
+						components: {},
+						dashboards: {},
+					};
+				}
+
+				messages.value[languageCode].data.dashboards =
+					dashboardTranslations;
+
+				console.log(
+					"Dashboard translations loaded:",
+					dashboardTranslations
+				);
+			} else {
+				throw new Error(`API returned status: ${response.data.status}`);
+			}
+		} catch (error) {
+			console.error("Failed to load dashboard translations:", error);
+
+			// 重試機制：最多重試 2 次
+			if (retryCount < 2) {
+				console.log(
+					`🔄 Retrying dashboard translations load (attempt ${
+						retryCount + 1
+					})`
+				);
+				await new Promise((resolve) => setTimeout(resolve, 1000));
+				return loadDashboardTranslations(languageCode, retryCount + 1);
+			} else {
+				console.error(
+					"❌ Failed to load dashboard translations after 3 attempts"
+				);
+			}
+		} finally {
+			isLoadingTranslations.value = false;
+		}
+	};
+
+	// 載入所有翻譯（靜態 + 動態）
+	const loadAllTranslations = async (languageCode = currentLocale.value) => {
+		console.log(`🚀 Loading all translations for ${languageCode}...`);
+
+		const results = await Promise.allSettled([
+			loadStaticTranslations(languageCode),
+			loadComponentTranslations(languageCode),
+			loadDashboardTranslations(languageCode),
+		]);
+
+		const staticSuccess =
+			results[0].status === "fulfilled" && results[0].value;
+		const componentSuccess = results[1].status === "fulfilled";
+		const dashboardSuccess = results[2].status === "fulfilled";
+
+		console.log(`Translation loading results for ${languageCode}:`, {
+			static: staticSuccess ? "✅" : "❌",
+			component: componentSuccess ? "✅" : "❌",
+			dashboard: dashboardSuccess ? "✅" : "❌",
+		});
+	};
+
+	// 切換語言
+	const setLocale = async (locale) => {
+		console.log(`Starting language switch to: ${locale}`);
+
+		isLoadingTranslations.value = true;
+
+		try {
+			currentLocale.value = locale;
+			localStorage.setItem("locale", locale);
+
+			// 載入該語言的所有翻譯
+			await loadAllTranslations(locale);
+
+			// 觸發內容重新載入
+			await triggerContentRefresh();
+		} catch (error) {
+			console.error("Error during language switch:", error);
+		} finally {
+			isLoadingTranslations.value = false;
+			console.log(`Language switch to ${locale} completed`);
+		}
+	};
+
+	// 觸發內容重新載入
+	const triggerContentRefresh = async () => {
+		if (typeof window !== "undefined" && window.dispatchEvent) {
+			window.dispatchEvent(
+				new CustomEvent("languageChanged", {
+					detail: { locale: currentLocale.value },
+				})
+			);
+		}
+	};
+
+	// 翻譯函數
+	const t = (key, fallback = key) => {
+		const keys = key.split(".");
+		let value = messages.value[currentLocale.value];
+
+		for (const k of keys) {
+			if (value && typeof value === "object" && value[k] !== undefined) {
+				value = value[k];
+			} else {
+				// 如果找不到翻譯，嘗試使用繁體中文作為 fallback
+				if (currentLocale.value !== "zh-TW") {
+					let fallbackValue = messages.value["zh-TW"];
+					for (const k of keys) {
+						if (
+							fallbackValue &&
+							typeof fallbackValue === "object" &&
+							fallbackValue[k] !== undefined
+						) {
+							fallbackValue = fallbackValue[k];
+						} else {
+							return fallback;
+						}
+					}
+					return fallbackValue;
+				}
+				return fallback;
+			}
+		}
+
+		return typeof value === "string" ? value : fallback;
+	};
+
+	// 根據組件 ID 獲取翻譯
+	const getComponentTranslationById = (componentId) => {
+		const componentTranslations =
+			messages.value[currentLocale.value]?.data?.components;
+		return componentTranslations?.[componentId] || null;
+	};
+
+	// 初始化時載入當前語言的翻譯
+	const initialize = async () => {
+		console.log("Initializing i18n store...");
+		await loadAllTranslations(currentLocale.value);
+	};
+
+	return {
+		currentLocale,
+		availableLocales,
+		messages,
+		isLoadingTranslations,
+		translationsLoaded,
+		loadStaticTranslations,
+		loadComponentTranslations,
+		loadDashboardTranslations,
+		loadAllTranslations,
+		setLocale,
+		triggerContentRefresh,
+		t,
+		getComponentTranslationById,
+		initialize,
+	};
+});
