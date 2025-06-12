@@ -14,7 +14,7 @@ import { useAuthStore } from "./authStore";
 import { useI18nStore } from "./i18nStore";
 import { getComponentDataTimeframe } from "../assets/utilityFunctions/dataTimeframe";
 import { CityManager } from "../dashboardComponent/utilities/cityManager";
-import { useDataTranslation } from '../composables/useDataTranslation';
+import { useDataTranslation } from "../composables/useDataTranslation";
 
 export const useContentStore = defineStore("content", {
 	state: () => ({
@@ -71,27 +71,27 @@ export const useContentStore = defineStore("content", {
 	actions: {
 		// Initialize translation function for cityManager
 		async initializeTranslation() {
-			console.log('Initializing translation...');
+			console.log("Initializing translation...");
 			const i18nStore = useI18nStore();
 			this.cityManager.setTranslationFunction(i18nStore.t);
-			
-			// 載入翻譯資料
-			const { translateDashboards, ensureTranslationsLoaded } = useDataTranslation();
-			
-			// 重要：強制重新載入翻譯
-			if (i18nStore.currentLocale !== 'zh-TW') {
-				console.log('Loading translations for current locale:', i18nStore.currentLocale);
-				await ensureTranslationsLoaded();
-				console.log('Translations loaded, updating content...');
-			}
-			
+
+			// 載入翻譯資料（靜態 + 動態）
+			const { translateDashboards } = useDataTranslation();
+
+			// 初始化 i18n store（載入 JSON 文件翻譯）
+			await i18nStore.initialize();
+
+			console.log("Translations loaded, updating content...");
+
 			// 重新翻譯現有的儀表板資料（無論什麼語言都要重新翻譯）
-			
+
 			// 重新翻譯個人儀表板
 			if (this.personalDashboards && this.personalDashboards.length > 0) {
-				this.personalDashboards = translateDashboards(this.personalDashboards);
-				console.log('Personal dashboards translated');
-				
+				this.personalDashboards = translateDashboards(
+					this.personalDashboards
+				);
+				console.log("Personal dashboards translated");
+
 				// 重新設定收藏儀表板
 				if (this.personalDashboards.length !== 0) {
 					this.favorites = this.personalDashboards.find(
@@ -102,24 +102,26 @@ export const useContentStore = defineStore("content", {
 					}
 				}
 			}
-			
+
 			// 重新翻譯城市儀表板
 			this.dashboards.forEach((dashboardArray, key) => {
 				if (dashboardArray && dashboardArray.length > 0) {
-					const translatedDashboards = translateDashboards(dashboardArray);
+					const translatedDashboards =
+						translateDashboards(dashboardArray);
 					this.dashboards.set(key, translatedDashboards);
 				}
 			});
-			console.log('City dashboards translated');
-			
+			console.log("City dashboards translated");
+
 			// 重新翻譯當前儀表板的組件
 			if (this.cityDashboard.components) {
 				const { translateComponentData } = useDataTranslation();
-				this.cityDashboard.components = this.cityDashboard.components.map(translateComponentData);
-				console.log('Current dashboard components translated');
+				this.cityDashboard.components =
+					this.cityDashboard.components.map(translateComponentData);
+				console.log("Current dashboard components translated");
 			}
-			
-			console.log('Translation initialization completed');
+
+			console.log("Translation initialization completed");
 		},
 		setComponentData(index, component) {
 			this.currentDashboard.components[index] = component;
@@ -132,7 +134,10 @@ export const useContentStore = defineStore("content", {
 		setRouteParams(mode, index, city) {
 			this.currentDashboard.mode = mode;
 			// 1-1. Don't do anything if the path is the same
-			if (this.currentDashboard.index === index && this.currentDashboard.city === city) {
+			if (
+				this.currentDashboard.index === index &&
+				this.currentDashboard.city === city
+			) {
 				if (
 					this.currentDashboard.mode === "/mapview" &&
 					!index.includes("map-layers")
@@ -168,15 +173,17 @@ export const useContentStore = defineStore("content", {
 			const data = response.data.data || {};
 
 			this.dashboards.clear();
-			
+
 			// 引入翻譯功能
 			const { translateDashboards } = useDataTranslation();
-			
+
 			Object.entries(data).forEach(([key, dashboardArray]) => {
 				// deal with personal dashboard
-				if (key === 'personal') {
-					this.personalDashboards = Array.isArray(dashboardArray) ? translateDashboards(dashboardArray) : [];
-					
+				if (key === "personal") {
+					this.personalDashboards = Array.isArray(dashboardArray)
+						? translateDashboards(dashboardArray)
+						: [];
+
 					if (this.personalDashboards.length !== 0) {
 						this.favorites = this.personalDashboards.find(
 							(el) => el.icon === "favorite"
@@ -189,8 +196,12 @@ export const useContentStore = defineStore("content", {
 					// deal with other city dashboard
 					if (Array.isArray(dashboardArray)) {
 						// move map-layers to the end and translate
-						const translatedDashboards = translateDashboards(dashboardArray);
-						this.dashboards.set(key, this.moveMapLayersToEnd(translatedDashboards));
+						const translatedDashboards =
+							translateDashboards(dashboardArray);
+						this.dashboards.set(
+							key,
+							this.moveMapLayersToEnd(translatedDashboards)
+						);
 					} else {
 						this.dashboards.set(key, []);
 					}
@@ -212,11 +223,11 @@ export const useContentStore = defineStore("content", {
 						break;
 					}
 				}
-			
+
 				if (firstCity && firstDashboard) {
 					this.currentDashboard.index = firstDashboard.index;
 					this.currentDashboard.city = firstCity;
-					
+
 					router.replace({
 						query: {
 							index: this.currentDashboard.index,
@@ -225,26 +236,28 @@ export const useContentStore = defineStore("content", {
 					});
 				}
 			}
-			
+
 			// After getting dashboard info, call the setCurrentDashboardAllContent (3.) method to get component info
 			this.setCurrentDashboardAllContent();
 		},
 		// 2-2. Move map-layers to the end of the array
 		moveMapLayersToEnd(dashboards) {
 			if (!Array.isArray(dashboards)) return [];
-			
+
 			// Find the map-layers item
-			const mapLayersItem = dashboards.find(item => 
-				item.index === 'map-layers' || item.index.includes('map-layers')
+			const mapLayersItem = dashboards.find(
+				(item) =>
+					item.index === "map-layers" ||
+					item.index.includes("map-layers")
 			);
-			
+
 			if (mapLayersItem) {
-				const otherItems = dashboards.filter(item => 
-				item.index !== mapLayersItem.index
+				const otherItems = dashboards.filter(
+					(item) => item.index !== mapLayersItem.index
 				);
 				return [...otherItems, mapLayersItem];
 			}
-			
+
 			return dashboards;
 		},
 		// 2-3. Get all dashboards of a city
@@ -253,17 +266,19 @@ export const useContentStore = defineStore("content", {
 		},
 		// 3. Call an API to get all component info of the current index dashboard not filtered by city and store it
 		async setCurrentDashboardAllContent() {
-			const currentCityDashboards = this.currentDashboard.city 
+			const currentCityDashboards = this.currentDashboard.city
 				? this.getDashboardsByCity(this.currentDashboard.city)
 				: this.personalDashboards;
-			const currentDashboardInfo = currentCityDashboards.find(item => item.index === this.currentDashboard.index);
-			
+			const currentDashboardInfo = currentCityDashboards.find(
+				(item) => item.index === this.currentDashboard.index
+			);
+
 			// If the current dashboard is not found, redirect to the first available dashboard
 			if (!currentDashboardInfo) {
 				// Find the first available dashboard
 				let firstCity = null;
 				let firstDashboard = null;
-				
+
 				for (const [city, dashboards] of this.dashboards.entries()) {
 					if (dashboards && dashboards.length > 0) {
 						firstCity = city;
@@ -271,7 +286,7 @@ export const useContentStore = defineStore("content", {
 						break;
 					}
 				}
-				
+
 				if (firstCity && firstDashboard) {
 					router.replace({
 						query: {
@@ -282,21 +297,23 @@ export const useContentStore = defineStore("content", {
 				}
 				return;
 			}
-			
+
 			// Set the current dashboard info
 			this.currentDashboard.name = currentDashboardInfo.name;
 			this.currentDashboard.icon = currentDashboardInfo.icon;
-			
+
 			// Get the dashboard index data
 			try {
 				// 針對目前index 取得不分city的資料
-				const response = await http.get(`/dashboard/${this.currentDashboard.index}`);
+				const response = await http.get(
+					`/dashboard/${this.currentDashboard.index}`
+				);
 				this.cityDashboard.components = response.data.data || [];
 				this.filterCurrentDashboardContent();
 			} catch (error) {
 				console.error("Error getting dashboard index data:", error);
 			}
-			
+
 			// Get the dashboard components data
 			this.setCurrentDashboardAllChartData();
 		},
@@ -318,35 +335,38 @@ export const useContentStore = defineStore("content", {
 							{
 								params: {
 									city: component.city,
-									...!["static", "current", "demo"].includes(
+									...(!["static", "current", "demo"].includes(
 										component.time_from
 									)
-									? getComponentDataTimeframe(
-										component.time_from,
-										component.time_to,
-										true
-									)
-									: {}
+										? getComponentDataTimeframe(
+												component.time_from,
+												component.time_to,
+												true
+										  )
+										: {}),
 								},
 							}
 						);
 
 						this.cityDashboard.components[index].chart_data =
 							response.data.data;
-						
+
 						if (response.data.categories) {
 							this.cityDashboard.components[
 								index
-							].chart_config.categories = response.data.categories;
+							].chart_config.categories =
+								response.data.categories;
 						}
 					} catch (error) {
-						console.error(`Failed to fetch chart data for component ${component.id}:`, error);
+						console.error(
+							`Failed to fetch chart data for component ${component.id}:`,
+							error
+						);
 						// Set empty chart data to avoid errors in subsequent operations
 						this.cityDashboard.components[index].chart_data = [];
-						
+
 						this.loading = false;
 					}
-					
 				}
 				for (
 					let index = 0;
@@ -367,14 +387,16 @@ export const useContentStore = defineStore("content", {
 										params: {
 											city: component.city,
 											...getComponentDataTimeframe(
-												component.history_config.range[i],
+												component.history_config.range[
+													i
+												],
 												"now",
 												true
-											)
+											),
 										},
 									}
 								);
-	
+
 								if (i === "0") {
 									this.cityDashboard.components[
 										index
@@ -384,9 +406,14 @@ export const useContentStore = defineStore("content", {
 									index
 								].history_data.push(response.data.data);
 							} catch (error) {
-								console.error(`Failed to fetch history data for component ${component.id} (range ${i}):`, error);
+								console.error(
+									`Failed to fetch history data for component ${component.id} (range ${i}):`,
+									error
+								);
 								// Add empty data to maintain data structure consistency
-								this.cityDashboard.components[index].history_data.push([]);
+								this.cityDashboard.components[
+									index
+								].history_data.push([]);
 							}
 						}
 					}
@@ -399,8 +426,10 @@ export const useContentStore = defineStore("content", {
 
 			// 翻譯所有組件資料
 			const { translateComponentData } = useDataTranslation();
-			this.cityDashboard.components = this.cityDashboard.components.map(translateComponentData);
-			
+			this.cityDashboard.components = this.cityDashboard.components.map(
+				translateComponentData
+			);
+
 			this.filterCurrentDashboardContent();
 		},
 		// 5. filter the info for the current dashboard based on the index and city and adds it to "currentDashboard"
@@ -408,32 +437,45 @@ export const useContentStore = defineStore("content", {
 			const { components } = this.cityDashboard;
 
 			if (components && components.length > 0) {
-				const currentCityData = components.filter(item => item.city === this.currentDashboard.city);
-				const notCurrentCityData = components.filter(item => item.city !== this.currentDashboard.city);
+				const currentCityData = components.filter(
+					(item) => item.city === this.currentDashboard.city
+				);
+				const notCurrentCityData = components.filter(
+					(item) => item.city !== this.currentDashboard.city
+				);
 
 				// If city is defined, filter components by city
 				if (this.currentDashboard.city) {
 					this.currentDashboard.components = currentCityData;
-					this.currentDashboardExcluded.components = notCurrentCityData;
+					this.currentDashboardExcluded.components =
+						notCurrentCityData;
 				} else {
 					// Is personal dashboard
 
 					const sortedData = [...components].sort((a, b) => {
 						// 如果id不同，保持原有順序
 						if (a.id !== b.id) return 0;
-						
+
 						// 如果id相同，將taipei排在前面，其他排在後面
-						if (a.city === 'taipei' && b.city !== 'taipei') return -1;
-						if (a.city !== 'taipei' && b.city === 'taipei') return 1;
-						
+						if (a.city === "taipei" && b.city !== "taipei")
+							return -1;
+						if (a.city !== "taipei" && b.city === "taipei")
+							return 1;
+
 						return 0;
 					});
 
-					const uniqueData = [...new Map(sortedData.map(item => [item.id, item])).values()];
+					const uniqueData = [
+						...new Map(
+							sortedData.map((item) => [item.id, item])
+						).values(),
+					];
 
 					// 找出被排除的重複資料（city 不同的資料）
-					const excludedData = components.filter(item => {
-						const uniqueItem = uniqueData.find(u => u.id === item.id);
+					const excludedData = components.filter((item) => {
+						const uniqueItem = uniqueData.find(
+							(u) => u.id === item.id
+						);
 						return uniqueItem && uniqueItem.city !== item.city;
 					});
 					this.currentDashboard.components = uniqueData;
@@ -498,30 +540,36 @@ export const useContentStore = defineStore("content", {
 
 					// Get all map layer data for all active cities
 					const responses = await Promise.all(
-						this.cityManager.activeCities.map(city =>
+						this.cityManager.activeCities.map((city) =>
 							http.get(`/dashboard/map-layers-${city}`)
 						)
 					);
 					const uniqueMap = new Map();
-					const mapLayersData = responses.flatMap(response => response.data.data || []);
+					const mapLayersData = responses.flatMap(
+						(response) => response.data.data || []
+					);
 
 					// Filter out duplicate map layers based on id and city
-					const filteredMapLayersData = mapLayersData.filter(item => {
-						const key = `${item.id}_${item.city}`;
-						if (!uniqueMap.has(key)) {
-							uniqueMap.set(key, true);
-							return true;
+					const filteredMapLayersData = mapLayersData.filter(
+						(item) => {
+							const key = `${item.id}_${item.city}`;
+							if (!uniqueMap.has(key)) {
+								uniqueMap.set(key, true);
+								return true;
+							}
+							return false;
 						}
-						return false;
-					});
+					);
 
-					this.allMapLayers = filteredMapLayersData
+					this.allMapLayers = filteredMapLayersData;
 					// Get chart_data for all layers
 					await this.setMapLayersContent(cityValue);
 				} else {
 					// Layer data already exists, filter directly by city
-					const isPersonalDashboard = !cityValue
-					isPersonalDashboard ? this.mapLayers = [] : this.filterMapLayersByCity(cityValue);
+					const isPersonalDashboard = !cityValue;
+					isPersonalDashboard
+						? (this.mapLayers = [])
+						: this.filterMapLayersByCity(cityValue);
 					this.loading = false;
 				}
 			} catch (error) {
@@ -533,37 +581,46 @@ export const useContentStore = defineStore("content", {
 		// Filter layers by city
 		filterMapLayersByCity(city) {
 			// Filter layers of the specified city from allMapLayers
-			this.mapLayers = this.allMapLayers.filter(item => item.city === city);
+			this.mapLayers = this.allMapLayers.filter(
+				(item) => item.city === city
+			);
 		},
 		// 8. Call an API for each map layer component to get its chart data and store it (if in /mapview)
 		async setMapLayersContent(city) {
 			try {
-			  for (let index = 0; index < this.allMapLayers.length; index++) {
-				const component = this.allMapLayers[index];
-				
-				try {
-				  const response = await http.get(
-					`/component/${component.id}/chart`,
-					{
-						params: {
-							city: component.city
-						}
+				for (let index = 0; index < this.allMapLayers.length; index++) {
+					const component = this.allMapLayers[index];
+
+					try {
+						const response = await http.get(
+							`/component/${component.id}/chart`,
+							{
+								params: {
+									city: component.city,
+								},
+							}
+						);
+
+						this.allMapLayers[index].chart_data =
+							response.data.data;
+					} catch (error) {
+						console.error(
+							`Failed to fetch data for component ${component.id}:`,
+							error
+						);
+						// Continue processing the next layer when an error occurs
 					}
-				  );
-				  
-				  this.allMapLayers[index].chart_data = response.data.data;
-				} catch (error) {
-				  console.error(`Failed to fetch data for component ${component.id}:`, error);
-				  // Continue processing the next layer when an error occurs
 				}
-			  }
-			  
-			  // Filter layers by the specified city
-			  this.filterMapLayersByCity(city);
+
+				// Filter layers by the specified city
+				this.filterMapLayersByCity(city);
 			} catch (error) {
-			  console.error("Error occurred during layer data processing:", error);
+				console.error(
+					"Error occurred during layer data processing:",
+					error
+				);
 			} finally {
-			  this.loading = false;
+				this.loading = false;
 			}
 		},
 
@@ -585,14 +642,17 @@ export const useContentStore = defineStore("content", {
 				params,
 			});
 
-			const uniqueData = [...new Map(response.data.data
-				// Sort the data to ensure that items with city 'metrotaipei' are at the end
-				.sort((a) => a.city === 'metrotaipei' ? 1 : -1)
-				// Create a map with item.id as the key to remove duplicates
-				.map(item => [item.id, item]))
-				// Convert the map values back to an array
-				.values()
-			]; 
+			const uniqueData = [
+				...new Map(
+					response.data.data
+						// Sort the data to ensure that items with city 'metrotaipei' are at the end
+						.sort((a) => (a.city === "metrotaipei" ? 1 : -1))
+						// Create a map with item.id as the key to remove duplicates
+						.map((item) => [item.id, item])
+				)
+					// Convert the map values back to an array
+					.values(),
+			];
 
 			this.components = uniqueData;
 			this.loading = false;
@@ -621,54 +681,63 @@ export const useContentStore = defineStore("content", {
 			}
 
 			dialogStore.moreInfoContent = response_1.data.data;
-			
-			for (let index = 0; index < dialogStore.moreInfoContent.length; index++) {
 
+			for (
+				let index = 0;
+				index < dialogStore.moreInfoContent.length;
+				index++
+			) {
 				const response_2 = await http.get(
 					`/component/${dialogStore.moreInfoContent[index].id}/chart`,
 					{
 						params: {
 							city: dialogStore.moreInfoContent[index].city,
-							...!["static", "current", "demo"].includes(
+							...(!["static", "current", "demo"].includes(
 								dialogStore.moreInfoContent[index].time_from
 							)
-							? getComponentDataTimeframe(
-								dialogStore.moreInfoContent[index].time_from,
-								dialogStore.moreInfoContent[index].time_to,
-								true
-							  )
-							: {}},
+								? getComponentDataTimeframe(
+										dialogStore.moreInfoContent[index]
+											.time_from,
+										dialogStore.moreInfoContent[index]
+											.time_to,
+										true
+								  )
+								: {}),
+						},
 					}
 				);
 
-				dialogStore.moreInfoContent[index].chart_data = response_2.data.data;
+				dialogStore.moreInfoContent[index].chart_data =
+					response_2.data.data;
 
 				if (response_2.data.categories) {
 					dialogStore.moreInfoContent[index].chart_config.categories =
 						response_2.data.categories;
 				}
-	
+
 				// 2-3. Get the component history data if applicable
 				if (dialogStore.moreInfoContent[index].history_config) {
-					for (let i in dialogStore.moreInfoContent[index].history_config
-						.range) {
+					for (let i in dialogStore.moreInfoContent[index]
+						.history_config.range) {
 						const response = await http.get(
 							`/component/${dialogStore.moreInfoContent[index].id}/history`,
 							{
 								params: {
-									city: dialogStore.moreInfoContent[index].city,
+									city: dialogStore.moreInfoContent[index]
+										.city,
 									...getComponentDataTimeframe(
-										dialogStore.moreInfoContent[index].history_config
-											.range[i],
+										dialogStore.moreInfoContent[index]
+											.history_config.range[i],
 										"now",
 										true
-									)
+									),
 								},
 							}
 						);
-	
+
 						if (i === "0") {
-							dialogStore.moreInfoContent[index].history_data = [];
+							dialogStore.moreInfoContent[index].history_data =
+								[];
 						}
 						dialogStore.moreInfoContent[index].history_data.push(
 							response.data.data
@@ -820,26 +889,26 @@ export const useContentStore = defineStore("content", {
 		// 修改設定儀表板資料的方法
 		async setCurrentDashboard(index) {
 			// ... existing code ...
-			
+
 			// 在設定資料後進行翻譯
 			const { translateDashboard } = useDataTranslation();
 			this.currentDashboard = translateDashboard(this.currentDashboard);
 		},
 		// 強制刷新所有翻譯內容
 		async forceRefreshTranslations() {
-			console.log('Force refreshing all translations...');
-			
+			console.log("Force refreshing all translations...");
+
 			// 重新載入儀表板資料並翻譯
 			if (this.dashboards.size > 0) {
 				await this.setDashboards(true); // 只重新載入儀表板，不重新導航
 			}
-			
+
 			// 如果有當前儀表板，重新載入其內容
 			if (this.currentDashboard.index) {
 				await this.setCurrentDashboardAllContent();
 			}
-			
-			console.log('Force refresh completed');
+
+			console.log("Force refresh completed");
 		},
 	},
 	debounce: {
